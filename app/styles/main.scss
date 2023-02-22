@@ -1,0 +1,127 @@
+.import-components-container {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-start;
+  column-gap: 50px;
+
+  .data-import-inputs {
+    // Add any additional styles for this element here
+  }
+
+  .allowed-file-types {
+    // Add any additional styles for this element here
+  }
+
+  .import-options {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    column-gap: 30px;
+
+    .csv-options {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: flex-start;
+      column-gap: 30px;
+    }
+  }
+}
+
+
+.header-components-container {
+  display: flex;
+  flex-direction: row;
+  column-gap: 1rem;
+}
+
+.header-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: 0.25rem;
+  line-height: 1;
+}
+
+#sidebar {
+  .nav {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.5rem;
+    line-height: 1;
+  }
+
+  .nav-link {
+    display: flex;
+    flex-direction: row;
+    column-gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-start;
+  }
+}
+
+.allowed-file-types {
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    font-size: 0.9em;
+    color: #444;
+    background: #f7f7f7;
+    border-radius: 5px;
+    overflow: hidden;
+    th, td {
+      padding: 0.5em;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      &:nth-child(1) {
+        width: 10%;
+      }
+      &:nth-child(2) {
+        width: 60%;
+      }
+      &:nth-child(3) {
+        width: 30%;
+      }
+    }
+    th {
+      background-color: cadetblue;
+      color: white;
+    }
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+    tr:last-child {
+      > td {
+        border-bottom: 0;
+      }
+    }
+  }
+}
+
+.mdi {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px !important;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all Webkit browsers */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE */
+  font-feature-settings: 'liga';
+}
