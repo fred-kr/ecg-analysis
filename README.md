@@ -10,4 +10,5 @@ R/programming techniques and how to optimize the code I write.
 Some of the features of this app include: Uploading and
 transforming/exploring your data, applying various types of filters
 (e.g. FIR or Wavelet-Transform) for smoothing the data, R-Peak
-detection, and more.
+detection, and more. (functionalities exist in earlier iterations of the
+app, will be implemented into this version in the coming days)
