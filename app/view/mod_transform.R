@@ -114,7 +114,7 @@ server <- function(id, raw_data){
       }
 
       # TODO: if the list of slots inside the reactive value is longer than 1 entry, display all slots and let user pick which to keep using
-      if () {
+      if (filter$data$) {
 
       }
     })
