@@ -5,7 +5,6 @@ box::use(
   rwavelet[MakeONFilter]
 )
 
-#' @export
 create_FIR_filter <- function(n, w, f_s, type) {
   assert_count(n, positive = TRUE)
   assert_number(f_s, lower = 1)
@@ -67,16 +66,37 @@ reactive_storage <- function(max_slots) {
 }
 
 #' @export
-rm_reactive_value_index <- function(rv, ind) {
-  .subset2(rv, "impl")$.values$remove(ind)
+rv_remove_key <- function(rv, key) {
+  if (is.reactivevalues(rv) & is.character(key)) {
+    .subset2(rv, "impl")$.values$remove(key)
+  } else {
+    stop("Error: param 'rv' must be of type 'reactiveValues' and param 'key' must be of type 'character'")
+  }
 }
 
 #' @export
-clear_reactive_value <- function(rv) {
-  .subset2(rv, "impl")$.values$clear()
+rv_remove_all_keys <- function(rv) {
+  if (is.reactivevalues(rv)) {
+    .subset2(rv, "impl")$.values$clear()
+  } else {
+    stop("Error: param 'rv' must be of type 'reactiveValues'")
+  }
 }
 
 #' @export
-reactive_vals_as_list <- function(rv) {
-  .subset2(rv, "impl")$.values$values(TRUE)
+rv_as_list <- function(rv) {
+  if (is.reactivevalues(rv)) {
+    .subset2(rv, "impl")$.values$values(TRUE)
+  } else {
+    stop("Error: param 'rv' must be of type 'reactiveValues'")
+  }
+}
+
+#' @export
+rv_get_n_keys <- function(rv) {
+  if (is.reactivevalues(rv)) {
+    .subset2(rv, "impl")$.values$size()
+  } else {
+    stop("Error: param 'rv' must be of type 'reactiveValues'")
+  }
 }

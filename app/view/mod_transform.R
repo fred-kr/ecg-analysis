@@ -14,7 +14,7 @@ box::use(
   app/logic/utils[
     create_FIR_filter,
     create_WT_filter,
-    reactive_vals_as_list,
+    rv_as_list,
   ]
 )
 #' @export
@@ -102,22 +102,25 @@ server <- function(id, raw_data){
   moduleServer(id, function(input, output, session) {
     filter_type <- reactive({ input$filter_type })
 
-    updated_data <- reactive({
-      if (input$filter_type %in% c("low", "high", "pass", "stop")) {
-        filter <- mod_FIR_filter$server("fir")
-      } else if (input$filter_type %in% c("wt_h", "wt_b", "wt_c", "wt_d", "wt_s")) {
-        filter <- mod_WT_filter$server("wt")
-      } else if (input$filter_type %in% c("m_mean", "m_median", "sgolay")) {
-        filter <- mod_SW_filter$server("sw")
-      } else {
-        filter <- raw_data
+    output$filter_ui <- renderUI({
+
+    })
+    get_filtered_data <- function(type) {
+      if (type %in% c("low", "high", "pass", "stop")) {
+        filter <- mod_FIR_filter$server("fir", filter_type(), raw_data$data)
+      } else if (type %in% c("wt_h", "wt_b", "wt_c", "wt_d", "wt_s")) {
+        filter <- mod_WT_filter$server("wt", filter_type(), raw_data$data)
+      } else if (type %in% c("m_mean", "m_median", "sgolay")) {
+        filter <- mod_SW_filter$server("sw", filter_type(), raw_data$data)
       }
+
 
       # TODO: if the list of slots inside the reactive value is longer than 1 entry, display all slots and let user pick which to keep using
-      if (filter$data$) {
-
+      n_slots <- rv_get_n_keys(filter$data)
+      if (n_slots == 1) {
+        return()
       }
-    })
+    }
 
     output$data_preview <- renderDT({
       datatable(
@@ -125,9 +128,6 @@ server <- function(id, raw_data){
         style = "bootstrap4"
       )
     })
-
-
-
 
   })
 }

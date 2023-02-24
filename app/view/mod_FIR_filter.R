@@ -1,8 +1,11 @@
 box::use(
   magrittr[`%>%`],
-  shiny[...],
+  shiny[tagList, numericInput, conditionalPanel, moduleServer, NS, observeEvent,
+        updateNumericInput, reactiveValues],
   gsignal[filter, freqz],
   tidytable[transmute],
+  sW = shinyWidgets,
+  bs4Dash[actionButton]
 )
 box::use(
   app/logic/utils[
@@ -22,6 +25,7 @@ ui <- function(id){
       value = 400,
       min = 1
     ),
+    # FIXME: Possibly won't work cause filter_type is an input from the transform module. Maybe ns param of conditionalPanel is a workaround?
     conditionalPanel(
       condition = "input.filter_type == 'low' || input.filter_type == 'high'",
       numericInput(
@@ -35,7 +39,7 @@ ui <- function(id){
     ),
     conditionalPanel(
       condition = "input.filter_type == 'stop' || input.filter_type == 'pass'",
-      numericRangeInput(
+      sW$numericRangeInput(
         inputId = ns("stop_pass"),
         label = "Desired band edges in Hz. The first value has to be smaller than the last",
         min = 0,
