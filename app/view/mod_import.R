@@ -13,7 +13,6 @@ box::use(
   shinyjs,
 )
 box::use(
-  app/logic/validate_file_input,
 )
 
 

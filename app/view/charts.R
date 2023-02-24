@@ -60,24 +60,46 @@ server <- function(id, data) {
     output$raw <- renderPlotly({
       raw_data <- data$data$m5_Z_norm
       if (!is.null(raw_data)) {
-        plot_data <- tidytable$tidytable(
+        data_plot_raw <- tidytable$tidytable(
           x = seq_along(raw_data),
           y = raw_data
         )
 
         plot_ly(
-          data = plot_data,
+          data = data_plot_raw,
           type = "scatter",
           mode = "lines",
           line = list(width = "1px")
         ) %>%
-          add_trace(x = ~ x, y = ~ y) %>%
+          add_trace(x = ~x, y = ~y) %>%
           layout(
             showlegend = FALSE,
             title = "Raw ECG data (Z-score normed)",
             xaxis = list(rangeslider = list(visible = TRUE))
           )
       }
+
+      filtered_data <-
+      if (!is.null(filtered_data)) {
+        data_plot_filtered <- tidytable$tidytable(
+          x = seq_along(raw_data),
+          y = raw_data
+        )
+
+        plot_ly(
+          data = data_plot_filtered,
+          type = "scatter",
+          mode = "lines",
+          line = list(width = "1px")
+        ) %>%
+          add_trace(x = ~x, y = ~y) %>%
+          layout(
+            showlegend = FALSE,
+            title = "Raw ECG data (Z-score normed)",
+            xaxis = list(rangeslider = list(visible = TRUE))
+          )
+      }
+
     })
   })
 }

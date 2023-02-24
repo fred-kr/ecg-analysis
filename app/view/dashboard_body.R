@@ -67,6 +67,7 @@ ui <- function(id){
 server <- function(id){
   moduleServer(id, function(input, output, session) {
     raw_data <- mod_import$server("mod_import")
+    selected_filter <- mod_transform$server("mod_transform", raw_data = raw_data)
     charts$server("visualisation", data = raw_data)
   })
 }

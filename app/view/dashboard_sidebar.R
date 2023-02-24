@@ -88,7 +88,7 @@ server <- function(id) {
     observeEvent(input$sidebar_menu, {
       current_tab_id <- input$sidebar_menu
 
-      if (current_tab_id == "graphs") {
+      if (current_tab_id == "visualisation") {
         updateControlbar("controlbar")
       }
 
