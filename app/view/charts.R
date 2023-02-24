@@ -79,26 +79,26 @@ server <- function(id, data) {
           )
       }
 
-      filtered_data <-
-      if (!is.null(filtered_data)) {
-        data_plot_filtered <- tidytable$tidytable(
-          x = seq_along(raw_data),
-          y = raw_data
-        )
-
-        plot_ly(
-          data = data_plot_filtered,
-          type = "scatter",
-          mode = "lines",
-          line = list(width = "1px")
-        ) %>%
-          add_trace(x = ~x, y = ~y) %>%
-          layout(
-            showlegend = FALSE,
-            title = "Raw ECG data (Z-score normed)",
-            xaxis = list(rangeslider = list(visible = TRUE))
-          )
-      }
+      # filtered_data <-
+      # if (!is.null(filtered_data)) {
+      #   data_plot_filtered <- tidytable$tidytable(
+      #     x = seq_along(raw_data),
+      #     y = raw_data
+      #   )
+      #
+      #   plot_ly(
+      #     data = data_plot_filtered,
+      #     type = "scatter",
+      #     mode = "lines",
+      #     line = list(width = "1px")
+      #   ) %>%
+      #     add_trace(x = ~x, y = ~y) %>%
+      #     layout(
+      #       showlegend = FALSE,
+      #       title = "Raw ECG data (Z-score normed)",
+      #       xaxis = list(rangeslider = list(visible = TRUE))
+      #     )
+      # }
 
     })
   })

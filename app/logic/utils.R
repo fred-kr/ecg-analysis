@@ -5,6 +5,7 @@ box::use(
   rwavelet[MakeONFilter]
 )
 
+#' @export
 create_FIR_filter <- function(n, w, f_s, type) {
   assert_count(n, positive = TRUE)
   assert_number(f_s, lower = 1)

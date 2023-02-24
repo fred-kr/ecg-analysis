@@ -3,7 +3,7 @@ box::use(
   bs4Dash[tabItem, box, actionButton],
   DT[renderDT, DTOutput, datatable],
   shiny[...],
-  rlang,
+  rlang[`!!`],
   tidytable,
   tools,
   utils,
@@ -30,11 +30,11 @@ ui <- function(id, data){
       data = data
     ),
     sW$materialSwitch(
-      inputId = ns("toggle_index_col"),
+      inputId = ns("toggle_col_index"),
       label = "Specify column containing corresponding time values?"
     ),
     conditionalPanel(
-      condition = "input.toggle_index_col == true",
+      condition = "input.toggle_col_index == true",
       varSelectInput(
         inputId = ns("col_index"),
         label = "Optional indexing column",
@@ -98,7 +98,7 @@ ui <- function(id, data){
       # Ability to save multiple different subsets of the original data
       # Provide aceEditor window to allow editing via code
 #' @export
-server <- function(id, raw_data){
+server <- function(id){
   moduleServer(id, function(input, output, session) {
     filter_type <- reactive({ input$filter_type })
 
@@ -106,19 +106,29 @@ server <- function(id, raw_data){
 
     })
     get_filtered_data <- function(type) {
+      # normed_data <- switch(
+      #   input$norm_method,
+      #   'z_score' =
+      # )
       if (type %in% c("low", "high", "pass", "stop")) {
-        filter <- mod_FIR_filter$server("fir", filter_type(), raw_data$data)
+        filter <- mod_FIR_filter$server("fir", filter_type(), !!input$col_signal)
       } else if (type %in% c("wt_h", "wt_b", "wt_c", "wt_d", "wt_s")) {
-        filter <- mod_WT_filter$server("wt", filter_type(), raw_data$data)
+        filter <- mod_WT_filter$server("wt", filter_type(), !!input$col_signal)
       } else if (type %in% c("m_mean", "m_median", "sgolay")) {
-        filter <- mod_SW_filter$server("sw", filter_type(), raw_data$data)
+        filter <- mod_SW_filter$server("sw", filter_type(), !!input$col_signal)
       }
 
 
       # TODO: if the list of slots inside the reactive value is longer than 1 entry, display all slots and let user pick which to keep using
+      if (input$toggle_col_index == TRUE) {
+        col_index <- !!input$col_index
+      }
       n_slots <- rv_get_n_keys(filter$data)
       if (n_slots == 1) {
-        return()
+        return(filter$data)
+      } else if (n_slots >= 2) {
+        filtered_data_list <- rv_as_list(filter$data)
+        cbi
       }
     }
 

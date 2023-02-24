@@ -259,8 +259,8 @@ server <- function(id){
         file <- input$crab_data
         data <- switch(
           file,
-          'm5_raw' = read_fst("app/static/data/m5_basic_fst.fst"),
-          'm5_filter' = read_fst("app/static/data/m5_detailed.fst"),
+          'm5_raw' = read_fst("app/static/data/crab_demo_fst.fst"),
+          'm5_filter' = read_fst("app/static/data/crab_demo_fst.fst"),
           NULL
         )
         re_data$data <- tidytable$as_tidytable(data)

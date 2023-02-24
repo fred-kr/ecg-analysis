@@ -13,6 +13,7 @@ box::use(
 box::use(
   app/view/charts,
   app/view/mod_import,
+  app/view/mod_transform,
 )
 
 #' @export
@@ -67,7 +68,7 @@ ui <- function(id){
 server <- function(id){
   moduleServer(id, function(input, output, session) {
     raw_data <- mod_import$server("mod_import")
-    selected_filter <- mod_transform$server("mod_transform", raw_data = raw_data)
+    selected_filter <- mod_transform$server("mod_transform")
     charts$server("visualisation", data = raw_data)
   })
 }
