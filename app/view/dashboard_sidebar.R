@@ -77,6 +77,18 @@ ui <- function(id) {
             class = c("mdi", "mdi-magnify-scan")
           )
         )
+      ),
+      menuItem(
+        text = "Report",
+        tabName = "report",
+        icon = icon(
+          name = NULL,
+          class = NULL,
+          lib = NULL,
+          tags$span(
+            class = c("mdi", "mdi-file-export")
+          )
+        )
       )
     )
   )

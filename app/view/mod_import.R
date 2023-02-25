@@ -1,6 +1,6 @@
 box::use(
   magrittr[`%>%`],
-  bs4Dash[tabItem, box, actionButton],
+  bs4Dash[tabItem, box, actionButton, infoBox],
   DT[renderDT, DTOutput, datatable],
   shiny[moduleServer, NS, tagList, modalDialog, tags, fileInput, selectInput, modalButton, observeEvent, reactive, req, HTML, reactiveVal, reactiveValues, observe, textInput, uiOutput, renderUI, conditionalPanel, numericInput, icon, reactiveValuesToList, isolate, isTruthy],
   rlang,
@@ -28,7 +28,6 @@ ui <- function(id){
       title = "Import your data",
       tags$span(
         class = "import-components-container",
-        # style = "display: flex;flex-direction: row;align-items: center;justify-content: flex-start;column-gap: 50px;",
         tags$div(
           class = "data-import-inputs",
           tags$div(
@@ -59,27 +58,34 @@ ui <- function(id){
         ),
         tags$div(
           class = "allowed-file-types",
-          tags$p(tags$b("Accepted file types:")),
-          tags$table(
-            id = "file-type-table",
-            tags$tbody(
-              tags$tr(
-                tags$td(".fst"),
-                tags$td(HTML("From <code>'fst'</code> R package"))
-              ),
-              tags$tr(
-                tags$td(".rds"),
-                tags$td("Standard R file format")
-              ),
-              tags$tr(
-                tags$td(".csv"),
-                tags$td("Comma-separated values")
-              ),
-              tags$tr(
-                tags$td(".txt"),
-                tags$td("Text file")
+          tags$b("Accepted file types:"),
+          infoBox(
+            title = "Delimited",
+            value = ".csv or .txt",
+            icon = icon(
+              name = NULL,
+              class = NULL,
+              lib = NULL,
+              tags$span(
+                class = c("mdi", "mdi-file-delimited"),
+                style = "font-size: 48px !important"
               )
-            )
+            ),
+            width = 12
+          ),
+          infoBox(
+            title = "Binary",
+            value = ".rds or .fst",
+            icon = icon(
+              name = NULL,
+              class = NULL,
+              lib = NULL,
+              tags$span(
+                class = c("mdi", "mdi-file-table"),
+                style = "font-size: 48px !important"
+              )
+            ),
+            width = 12
           )
         ),
         tags$div(

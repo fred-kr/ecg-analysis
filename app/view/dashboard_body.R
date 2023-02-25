@@ -23,8 +23,8 @@ ui <- function(id){
   dashboardBody(
     tags$head(
       tags$link(
-        rel = "stylesheet",
         href = "https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.1.96/css/materialdesignicons.min.css",
+        rel = "stylesheet",
         integrity = "sha512-NaaXI5f4rdmlThv3ZAVS44U9yNWJaUYWzPhvlg5SC7nMRvQYV9suauRK3gVbxh7qjE33ApTPD+hkOW78VSHyeg==",
         crossorigin = "anonymous",
         referrerpolicy = "no-referrer"
