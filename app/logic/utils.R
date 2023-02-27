@@ -2,9 +2,13 @@ box::use(
   magrittr[`%>%`],
   checkmate[assert_count, assert_number, assert_numeric, assert_choice, assert_integerish],
   gsignal[fir1],
-  rwavelet[MakeONFilter]
+  rwavelet[MakeONFilter],
+  shiny[is.reactivevalues, icon, tags],
 )
 
+# TODO: put functions into relevant files
+
+# Creating smoothing filters
 #' @export
 create_FIR_filter <- function(n, w, f_s, type) {
   assert_count(n, positive = TRUE)
@@ -47,6 +51,7 @@ create_WT_filter <- function(type, type_ver) {
   return(wt_filter)
 }
 
+# Norming data
 #' @export
 min_max_norm <- function(x, ...) {
   return((x - min(x, ...)) / (max(x, ...) - min(x, ...)))
@@ -57,6 +62,7 @@ z_score_norm <- function(x, ...) {
   return((x - mean(x, ...)) / sd(x, ...))
 }
 
+# Editing reactive values
 #' @export
 reactive_storage <- function(max_slots) {
   index <- 1
@@ -100,4 +106,10 @@ rv_get_n_keys <- function(rv) {
   } else {
     stop("Error: param 'rv' must be of type 'reactiveValues'")
   }
+}
+
+# Use material design icon
+#' @export
+md_icon <- function(icon_name, ...) {
+  icon(name = NULL, class = NULL, lib = NULL, tags$span(class = c("mdi", paste0("mdi-", icon_name))), ...)
 }

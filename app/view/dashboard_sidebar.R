@@ -6,7 +6,7 @@ box::use(
     updateControlbar,
     updateControlbarMenu
   ],
-  shiny[moduleServer, NS, tagList, tags, observeEvent, icon],
+  shiny[moduleServer, NS, tagList, tags, observeEvent, icon, reactive],
 )
 
 #' @export
@@ -97,17 +97,6 @@ ui <- function(id) {
 #' @export
 server <- function(id) {
   moduleServer(id, function(input, output, session) {
-    observeEvent(input$sidebar_menu, {
-      current_tab_id <- input$sidebar_menu
-
-      if (current_tab_id == "visualisation") {
-        updateControlbar("controlbar")
-      }
-
-      updateControlbarMenu(
-        inputId = "controlbar_menu",
-        selected = current_tab_id
-      )
-    })
+    # return(active_tab <- reactive({ input$sidebar_menu }))
   })
 }

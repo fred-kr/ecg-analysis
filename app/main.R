@@ -32,7 +32,7 @@ server <- function(id) {
     re_plots <- reactiveValues(raw = NULL, filtered = NULL, template = NULL)
 
     dashboard_header$server("header")
-    dashboard_sidebar$server("sidebar")
+    active_tab <- dashboard_sidebar$server("sidebar")
     dashboard_body$server("body")
 
     # Stop R process when closing browser window

@@ -12,40 +12,6 @@
   .allowed-file-types {
     display: inline-block;
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin: 1em 0;
-      font-size: 0.9em;
-      color: #444;
-      background: #f7f7f7;
-      border-radius: 5px;
-      overflow: hidden;
-
-      td {
-        padding: 0.5em;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-
-        &:nth-child(1) {
-          width: 10%;
-        }
-
-        &:nth-child(2) {
-          width: 90%;
-        }
-      }
-
-      tr:hover {
-        background-color: #f5f5f5;
-      }
-
-      tr:last-child {
-        > td {
-          border-bottom: 0;
-        }
-      }
-    }
   }
 
   .import-options {
@@ -62,7 +28,19 @@
       justify-content: flex-start;
       column-gap: 30px;
     }
+
+    .txt-options {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: flex-start;
+      column-gap: 30px;
+    }
   }
+}
+
+#data-preview-box {
+  width: fit-content;
 }
 
 .header-components-container {
