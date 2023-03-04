@@ -3,7 +3,7 @@ box::use(
   DT[DTOutput, renderDT, datatable],
   magrittr[`%>%`],
   plotly[plotlyOutput, plot_ly],
-  shiny[moduleServer, NS, tagList, tags, tabPanel, req, observeEvent, reactiveVal, reactive, observe, bindCache, isolate, renderTable, tableOutput, icon, fileInput],
+  shiny[moduleServer, NS, tagList, tags, tabPanel, req, observeEvent, reactiveVal, reactive, observe, bindCache, isolate, renderTable, tableOutput, icon, fileInput, reactiveValues],
   tools,
   fst[read_fst],
   readr[read_csv, read_rds, read_delim],
@@ -21,6 +21,7 @@ ui <- function(id){
   ns <- NS(id)
 
   dashboardBody(
+    # Allows the use of material design icons
     tags$head(
       tags$link(
         href = "https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.1.96/css/materialdesignicons.min.css",
@@ -48,13 +49,7 @@ ui <- function(id){
         )
       ),
       mod_import$ui(ns("mod_import")),
-      tabItem(
-        tabName = "transform",
-        box(
-          width = 6,
-          title = "TransformationStation"
-        )
-      ),
+      mod_transform$ui(ns("mod_transform")),
       charts$ui(ns("visualisation")),
       tabItem(
         tabName = "analysis",
@@ -65,10 +60,31 @@ ui <- function(id){
 }
 
 #' @export
-server <- function(id){
+server <- function(id, data){
   moduleServer(id, function(input, output, session) {
-    raw_data <- mod_import$server("mod_import")
-    selected_filter <- mod_transform$server("mod_transform")
+    # Initialize reactive value that will store the data that is currently being
+    # worked on
+    re_data <-
+      reactiveValues(
+        df = tidytable$tidytable(
+          index = numeric(),
+          raw_sig = numeric(),
+          filtered_sig = numeric()
+        ),
+        filter_type = NULL,
+        temp = NULL,
+        extra = NULL
+      )
+
+    # Initial file upload gets stored in the `temp` value, will get deleted (?)
+    # once the signal (and optionally index) column have been selected in the
+    # transform tab to save memory
+    re_data$temp <- mod_import$server("mod_import")
+
+    # Pass data in temp to transform module for relevant column selection and
+    # application of smoothing filters
+    req(re_data$temp)
+    mod_transform$server("mod_transform", data = re_data)
     charts$server("visualisation", data = raw_data)
   })
 }

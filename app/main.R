@@ -2,6 +2,7 @@ box::use(
   bs4Dash[dashboardPage],
   shiny[moduleServer, NS, stopApp, reactiveValues, observeEvent, onStop, HTML],
   htmlwidgets[JS],
+  tidytable,
 )
 box::use(
   app/view/dashboard_header,
@@ -26,13 +27,12 @@ ui <- function(id) {
 #' @export
 server <- function(id) {
   moduleServer(id, function(input, output, session) {
+    # Increase upload file size limit to 1GB
     options(shiny.maxRequestSize = 1000*1024^2)
 
-    re_plots_data <- reactiveValues(raw = NULL, filtered = NULL)
-    re_plots <- reactiveValues(raw = NULL, filtered = NULL, template = NULL)
-
     dashboard_header$server("header")
-    active_tab <- dashboard_sidebar$server("sidebar")
+    dashboard_sidebar$server("sidebar")
+
     dashboard_body$server("body")
 
     # Stop R process when closing browser window

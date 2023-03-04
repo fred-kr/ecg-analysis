@@ -113,12 +113,11 @@ ui <- function(id){
 server <- function(id){
   moduleServer(id, function(input, output, session) {
 
-    re_data <- reactiveValues(data = NULL)
+    temp <- reactiveVal()
 
     selected_file_type <- reactive({ input$file_type })
 
     output$import_options <- renderUI({
-      # req(isTruthy(!is.null(input$file_upload) | input$crab_data != ""))
       ns <- session$ns
 
       # UI elements for FST file upload
@@ -214,59 +213,68 @@ server <- function(id){
         )
       )
 
+      # Render UI elements for the chosen file type
       switch(
         selected_file_type(),
-        csv = csv_options,
-        fst = fst_options,
-        txt = txt_options,
-        rds = "No input options exist for this filetype"
+        "csv" = csv_options,
+        "fst" = fst_options,
+        "txt" = txt_options,
+        "rds" = "No input options exist for this file type"
       )
     })
 
+    # Reset the `fileInput` and `selectInput` back to their initial values (NULL
+    # and "", respectively)
     observeEvent(input$reset_import, {
       shinyjs$reset(id = "file_upload")
       shinyjs$reset(id = "crab_data")
     })
 
+    # Clear/delete the currently loaded data
     observeEvent(input$clear_cache, {
-      re_data$data <- NULL
+      temp(NULL)
     })
 
+    # When the `Confirm` button is pressed, either load the user selected file
+    # using the correct function or load the selected pre-existing demo data set
+    # into the app. In both cases the loaded data will be converted into a
+    # tidytable
     observeEvent(input$confirm_import_opts, {
-      re_data$data <- NULL
+      temp(NULL)
       if (!is.null(input$file_upload)) {
         file <- input$file_upload
         path <- file$datapath
         ext <- tools$file_ext(path)
-        data <- switch(
+        content <- switch(
           ext,
-          'fst' = read_fst(path, from = input$fst_opts_range[1], to = input$fst_opts_range[2]),
-          'rds' = read_rds(path),
-          'csv' = read_csv2(path, skip = input$csv_opts_skip, quote = input$csv_opts_quote, locale = locale(decimal_mark = input$csv_opts_decimal_mark), col_names = input$csv_opts_col_names),
-          'txt' = read_delim(path, skip = input$txt_opts_skip, quote = input$txt_opts_quote, locale = locale(decimal_mark = input$txt_opts_decimal_mark), col_names = input$txt_opts_col_names)
+          "fst" = read_fst(path, from = input$fst_opts_range[1], to = input$fst_opts_range[2]),
+          "rds" = read_rds(path),
+          "csv" = read_csv2(path, skip = input$csv_opts_skip, quote = input$csv_opts_quote, locale = locale(decimal_mark = input$csv_opts_decimal_mark), col_names = input$csv_opts_col_names),
+          "txt" = read_delim(path, skip = input$txt_opts_skip, quote = input$txt_opts_quote, locale = locale(decimal_mark = input$txt_opts_decimal_mark), col_names = input$txt_opts_col_names)
         )
-        re_data$data <- tidytable$as_tidytable(data)
+        temp(tidytable$as_tidytable(content))
       } else if (input$crab_data != "") {
         file <- input$crab_data
-        data <- switch(
+        content <- switch(
           file,
-          'm5_raw' = read_fst("app/static/data/crab_demo_fst.fst"),
-          'm5_filter' = read_fst("app/static/data/crab_demo_fst.fst"),
+          "m5_raw" = read_fst("app/static/data/crab_demo_fst.fst"),
+          "m5_filter" = read_fst("app/static/data/crab_demo_fst.fst"),
           NULL
         )
-        re_data$data <- tidytable$as_tidytable(data)
+        temp(tidytable$as_tidytable(content))
       }
 
     })
 
+    # Display the first 10 rows of the loaded data as a preview
     output$data_preview <- renderDT({
       datatable(
-        data = utils$head(re_data$data, n = 10),
+        data = utils$head(temp(), n = 10),
         style = "bootstrap4"
       )
     })
 
-    return(re_data)
+    return(req(temp))
   })
 }
 

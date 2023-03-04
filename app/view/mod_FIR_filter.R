@@ -1,16 +1,16 @@
 box::use(
   magrittr[`%>%`],
   shiny[tagList, numericInput, conditionalPanel, moduleServer, NS, observeEvent,
-        updateNumericInput, reactiveValues],
+        updateNumericInput, reactiveValues, reactive, uiOutput, renderUI, outputOptions, tags, observe, req, selectInput],
   gsignal[filter, freqz],
   tidytable[transmute],
   sW = shinyWidgets,
-  bs4Dash[actionButton]
+  bs4Dash[actionButton],
+  shinyjs,
 )
 box::use(
   app/logic/utils[
     create_FIR_filter,
-    reactive_storage,
   ],
 )
 
@@ -18,6 +18,7 @@ box::use(
 ui <- function(id){
   ns <- NS(id)
 
+  shinyjs$useShinyjs()
   tagList(
     numericInput(
       inputId = ns("f_s"),
@@ -25,9 +26,18 @@ ui <- function(id){
       value = 400,
       min = 1
     ),
-    # FIXME: Possibly won't work cause filter_type is an input from the transform module. Maybe ns param of conditionalPanel is a workaround?
+    selectInput(
+      inputId = ns("filter_type"),
+      label = "Specify the type of filter you want to use",
+      choices = list(
+        "Low-Pass" = "low",
+        "High-Pass" = "high",
+        "Pass-Band" = "pass",
+        "Stop-Band" = "stop"
+      )
+    ),
     conditionalPanel(
-      condition = "input.filter_type == 'low' || input.filter_type == 'high'",
+      condition = "input.filter_type === 'low' || input.filter_type === 'high'",
       numericInput(
         inputId = ns("low_high"),
         label = "Desired cutoff frequency in Hz",
@@ -38,7 +48,7 @@ ui <- function(id){
       )
     ),
     conditionalPanel(
-      condition = "input.filter_type == 'stop' || input.filter_type == 'pass'",
+      condition = "input.filter_type === 'stop' || input.filter_type === 'pass'",
       sW$numericRangeInput(
         inputId = ns("stop_pass"),
         label = "Desired band edges in Hz. The first value has to be smaller than the last",
@@ -58,24 +68,29 @@ ui <- function(id){
     actionButton(
       inputId = ns("apply_filter"),
       label = "Apply filter settings"
+    ),
+    actionButton(
+      inputId = ns("view_in"),
+      label = "View Inputs"
     )
   )
 
 }
 
 #' @export
-server <- function(id, filter_type, raw_data){
+server <- function(id, data){
   moduleServer(id, function(input, output, session) {
-    re_data_fir <- reactiveValues(slot_1 = NULL)
-    re_fir_prop <- reactiveValues(slot_1 = NULL)
+    fir_filtered <- reactiveValues(data = NULL, filter = NULL)
 
+    # Change maximum allowed value for cutoff frequency depending on sampling
+    # frequency
     observeEvent(input$f_s, {
-      if (filter_type() %in% c("low", "high")) {
+      if (input$filter_type %in% c("low", "high")) {
         updateNumericInput(
           inputId = "low_high",
           max = input$f_s
         )
-      } else if (filter_type() %in% c("stop", "pass")) {
+      } else if (input$filter_type %in% c("stop", "pass")) {
         updateNumericInput(
           inputId = "stop_pass",
           max = input$f_s
@@ -83,32 +98,52 @@ server <- function(id, filter_type, raw_data){
       }
     })
 
+    # When the `Apply filter settings` button is pressed, a FIR-filter is
+    # created with the current settings and then applied to the signal data
     observeEvent(input$apply_filter, {
+
+      # Cutoff frequency, given in Hz
       fir_w <- switch(
-        filter_type(),
-        'low' = input$low_high,
-        'high' = input$low_high,
-        'stop' = c(input$stop_pass[1], input$stop_pass[2]),
-        'pass' = c(input$stop_pass[1], input$stop_pass[2])
+        input$filter_type,
+        "low" = input$low_high,
+        "high" = input$low_high,
+        "stop" = c(input$stop_pass[1], input$stop_pass[2]),
+        "pass" = c(input$stop_pass[1], input$stop_pass[2])
       )
 
+      # Actual filter creation, using own wrapper function around
+      # gsignal::fir1()
       fir_filter <- create_FIR_filter(
         n = input$filter_order,
         w = fir_w,
         f_s = input$f_s,
-        type = filter_type()
+        type = input$filter_type
       )
 
-      fir_properties_plot <- freqz(fir_filter)
-      fir_data <- filter(fir_filter, raw_data())
+      # Apply the filter and write the new values into the reactiveValues().
+      # `gsignal::freqz` gives visual information about the created filter
+      fir_filtered$data <- filter(fir_filter, data())
+      fir_filtered$filter <- freqz(fir_filter)
 
-      store_fir_prop <- reactive_storage(max_slots = 3)
-      store_fir_prop(storage = re_fir_prop, data = fir_properties_plot)
+      # Maybe implement the following lines later on, in theory allows to save
+      # multiple different filters in a save slot system, see
+      # app/logic/utils[reactive_storage()]
 
-      store_fir_data <- reactive_storage(max_slots = 3)
-      store_fir_data(storage = re_data_fir, data = fir_data)
+      # store_fir_prop <- reactive_storage(max_slots = 1)
+      # store_fir_prop(storage = re_fir_prop, data = fir_properties_plot)
+      #
+      # store_fir_data <- reactive_storage(max_slots = 1)
+      # store_fir_data(storage = re_data_fir, data = fir_data)
     })
 
-    return(list(data = re_data_fir, props = re_fir_prop))
+    # observeEvent(input$view_in, {
+    #   fir_in <- reactiveValuesToList(input)
+    #   print("FIR inputs:")
+    #   print(fir_in)
+    # })
+
+    # Only give return value when data exists
+    req(fir_filtered$data, fir_filtered$filter)
+    return(fir_filtered)
   })
 }

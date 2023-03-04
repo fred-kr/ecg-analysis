@@ -51,26 +51,18 @@ create_WT_filter <- function(type, type_ver) {
   return(wt_filter)
 }
 
-# Norming data
-#' @export
-min_max_norm <- function(x, ...) {
-  return((x - min(x, ...)) / (max(x, ...) - min(x, ...)))
-}
-
-#' @export
-z_score_norm <- function(x, ...) {
-  return((x - mean(x, ...)) / sd(x, ...))
-}
-
 # Editing reactive values
-#' @export
-reactive_storage <- function(max_slots) {
-  index <- 1
-  function(storage, data) {
-    storage[[paste0("slot_", index)]] <- data
-    index <<- index %% min(c(max_slots, 5)) + 1
-  }
-}
+
+# Function to create a sort of save slot system in form of a `reactiveValues`
+# object
+
+# reactive_storage <- function(max_slots) {
+#   index <- 1
+#   function(storage, data) {
+#     storage[[paste0("slot_", index)]] <- data
+#     index <<- index %% min(c(max_slots, 5)) + 1
+#   }
+# }
 
 #' @export
 rv_remove_key <- function(rv, key) {
