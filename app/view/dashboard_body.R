@@ -66,11 +66,7 @@ server <- function(id, data){
     # worked on
     re_data <-
       reactiveValues(
-        df = tidytable$tidytable(
-          index = numeric(),
-          raw_sig = numeric(),
-          filtered_sig = numeric()
-        ),
+        df = NULL,
         filter_type = NULL,
         temp = NULL,
         extra = NULL
@@ -83,8 +79,8 @@ server <- function(id, data){
 
     # Pass data in temp to transform module for relevant column selection and
     # application of smoothing filters
-    req(re_data$temp)
-    mod_transform$server("mod_transform", data = re_data)
+    processed_data <- mod_transform$server("mod_transform", data = re_data)
+
     charts$server("visualisation", data = raw_data)
   })
 }

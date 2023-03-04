@@ -80,7 +80,7 @@ ui <- function(id){
 #' @export
 server <- function(id, data){
   moduleServer(id, function(input, output, session) {
-    fir_filtered <- reactiveValues(data = NULL, filter = NULL)
+    fir_filtered <- reactiveValues(data = NULL, filt_info = NULL)
 
     # Change maximum allowed value for cutoff frequency depending on sampling
     # frequency
@@ -123,7 +123,7 @@ server <- function(id, data){
       # Apply the filter and write the new values into the reactiveValues().
       # `gsignal::freqz` gives visual information about the created filter
       fir_filtered$data <- filter(fir_filter, data())
-      fir_filtered$filter <- freqz(fir_filter)
+      fir_filtered$filt_info <- freqz(fir_filter)
 
       # Maybe implement the following lines later on, in theory allows to save
       # multiple different filters in a save slot system, see

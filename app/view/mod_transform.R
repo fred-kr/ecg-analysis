@@ -106,7 +106,10 @@ server <- function(id, data){
       return((x - mean(x, ...)) / sd(x, ...))
     }
 
-    ## Dynamic UI elements for selection of signal/index column #####
+    # Save `input$filter_family` as a reactive expression ----
+    filt_fam <- reactive({ input$filter_family })
+
+    # Dynamic UI elements for selection of signal/index column ----
     output$col_selection <- renderUI({
       req(data$temp)
       ns <- session$ns
@@ -139,7 +142,7 @@ server <- function(id, data){
       }
     })
 
-    ## Display UI elements for the chosen filter famliy #####
+    # Display UI elements for the chosen filter family ----
     output$filter_ui <- renderUI({
       switch(
         input$filter_family,
@@ -150,7 +153,7 @@ server <- function(id, data){
       )
     })
 
-    ## Create a tidytable from the index and signal columns #####
+    # Create a tidytable from the index and signal columns ----
     core_tidy_df <- reactive({
       # Signal column
       raw_sig <- data$temp()[[!!input$col_signal]]
@@ -164,7 +167,7 @@ server <- function(id, data){
       return(tidy_df)
     })
 
-    ## Add column with normalized values (if selected by user) #####
+    # Add column with normalized values (if selected by user) ----
     normalized_data <- eventReactive(input$norm_method, {
       if (is.null(core_tidy_df)) {
         return(NULL)
@@ -181,7 +184,7 @@ server <- function(id, data){
       }
     })
 
-    ## Add column with filtered values #####
+    # Add column with filtered values ----
     # TODO: Make it so selecting a different filtering method just adds a new
     # column to the existing core data table
     smoothed_data <- eventReactive(input$filter_family, {
@@ -197,49 +200,51 @@ server <- function(id, data){
         "No smoothing filter selected"
       )
 
-      # For FIR filter, this is a list with objects `data` and `filter`.
-      # `filter` contains the output of gsignal::freqz(fir_filter)
-      return(smoothed_col)
+      # For FIR filters, this is a list with objects `data` and `filt_info`.
+      # `filt_info` contains the output of gsignal::freqz(fir_filter) (a plot)
+      # For WT filters, ...
+      # For SW filers, ...
+      return(
+        list(
+          data = smoothed_col$data,
+          filt_info = smoothed_col$filt_info
+        )
+      )
     })
 
     # Combine raw, normed and filtered (and index) into one tidytable ----
+    main_data <- reactive({
+      # normalized_data() is a tidytable with columns `index`, `raw_sig` and, if
+      # a normalization method was selected, either `z_score_normed` or
+      # `min_max_normed`
+      # smoothed_data$data is a numeric vector
+      validate(
+        need(normalized_data, "No normalized/raw values found"),
+        need(smoothed_data$data, "No smoothed values found")
+      )
 
+      combined <- normalized_data() %>%
+        tt$mutate(smoothed = smoothed_data$data)
 
-      # Send raw signal to a filtering module
-      filtered <- reactiveValues()
-      if (input$filter_family %in% c("low", "high", "pass", "stop")) {
-        filtered(mod_FIR_filter$server("fir", data = normed))
-      } else if (input$filter_family %in% c("wt_h", "wt_b", "wt_c", "wt_d", "wt_s")) {
-        filtered(mod_WT_filter$server("wt", normed))
-      } else if (input$filter_family %in% c("m_mean", "m_median", "sgolay")) {
-        filtered(mod_SW_filter$server("sw", normed))
-      } else {
-        "No smoothing filter selected"
-      }
-
-      data$df$index <- indexing_column
-      data$df$raw_sig <- raw_signal
-      data$df$filtered_sig <- filtered$data
-
-      data$filter_type <- input$filter_family
-
-      data$extra <- filtered$filter
-
-      data$temp() <- NULL
-
-      return(data)
+      return(combined)
     })
 
     # Display a preview of the the three columns (index, raw, filtered)
     output$data_preview <- renderDT({
-      req(filtered_data)
+      req(main_data)
       datatable(
-        data = utils$head(filtered_data()$df, n = 10),
+        data = utils$head(main_data(), n = 10),
         style = "bootstrap4"
       )
     })
 
-    return(filtered_data)
+    return(
+      list(
+        main_df = reactive({ main_data }),
+        filter_family = reactive({ filt_fam }),
+        extra = reactive({ smoothed_data()$filt_info })
+      )
+    )
   })
 }
 
