@@ -8,7 +8,9 @@ ui <- function(id){
   ns <- NS(id)
 
   tagList(
-
+    # "Moving Average" = "m_mean",
+    # "Moving Median" = "m_median",
+    # "Savitzky-Golay" = "sgolay"
   )
 }
 

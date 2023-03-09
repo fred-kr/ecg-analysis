@@ -16,7 +16,6 @@ box::use(
   app/logic/utils[
     create_FIR_filter,
     create_WT_filter,
-    rv_as_list,
   ],
   app/view/mod_FIR_filter,
   app/view/mod_WT_filter,
@@ -51,18 +50,8 @@ ui <- function(id){
             choices = list(
               "None" = "",
               "FIR-Filters" = "fir",
-              "Wavelet-Transform" = list(
-                "Haar" = "wt_h",
-                "Beylkin" = "wt_b",
-                "Coiflet" = "wt_c",
-                "Daubechies" = "wt_d",
-                "Symmlet" = "wt_s"
-              ),
-              "Sliding Window" = list(
-                "Moving Average" = "m_mean",
-                "Moving Median" = "m_median",
-                "Savitzky-Golay" = "sgolay"
-              )
+              "Wavelet-Transform" = "wt",
+              "Sliding Window" = "sw"
             )
           )
         )
@@ -86,18 +75,11 @@ ui <- function(id){
   )
 
 }
-
-      # Change column types
-      # Subset data by factor column(s) if they exist/Allow interactive grouping
-      # Provide summary/descriptive statistics (per group/factor)
-      # Ability to save multiple different subsets of the original data
-      # Provide aceEditor window to allow editing via code
-      # Provide a way to save/reload settings/selections in future sessions
+# TODO
 #' @export
 server <- function(id, data){
   moduleServer(id, function(input, output, session) {
-    ## Helper functions #####
-    # Norming data
+    # Helper functions ----
     min_max_norm <- function(x, ...) {
       return((x - min(x, ...)) / (max(x, ...) - min(x, ...)))
     }
@@ -106,18 +88,16 @@ server <- function(id, data){
       return((x - mean(x, ...)) / sd(x, ...))
     }
 
-    # Save `input$filter_family` as a reactive expression ----
-    filt_fam <- reactive({ input$filter_family })
 
     # Dynamic UI elements for selection of signal/index column ----
     output$col_selection <- renderUI({
-      req(data$temp)
+      req(data())
       ns <- session$ns
       tagList(
         varSelectInput(
           inputId = ns("col_signal"),
           label = "Specify which column contains the signal values",
-          data = data$temp()
+          data = data()
         ),
         sW$awesomeCheckbox(
           inputId = ns("toggle_col_index"),
@@ -127,7 +107,7 @@ server <- function(id, data){
           varSelectInput(
             inputId = ns("col_index"),
             label =  "Optional indexing column",
-            data = data$temp()
+            data = data()
           )
         )
       )
@@ -142,6 +122,7 @@ server <- function(id, data){
       }
     })
 
+
     # Display UI elements for the chosen filter family ----
     output$filter_ui <- renderUI({
       switch(
@@ -153,28 +134,40 @@ server <- function(id, data){
       )
     })
 
+
     # Create a tidytable from the index and signal columns ----
     core_tidy_df <- reactive({
+      d_inst <- data()
+      # Only evaluate expression once data() exists
+      if (is.null(d_inst)) {
+        return(NULL)
+      }
+
       # Signal column
-      raw_sig <- data$temp()[[!!input$col_signal]]
+      raw_sig <- d_inst %>% tt$select(!!input$col_signal)
 
       # If no index column is provided, create one by creating a sequence along
       # the raw signal column, from 1 to length(raw_sig)
+      # FIXME: ifelse is probably wrong way to handle this. need to convert to numeric or sth after using tt function
       index <-
-        tt$if_else(input$toggle_col_index, data$temp()[[!!input$col_index]], seq_along(raw_sig))
+        tt$if_else(input$toggle_col_index, tt$select(.df = d_inst, !!input$col_index), seq_along(raw_sig))
 
       tidy_df <- tt$tidytable(index = index, raw_sig = raw_sig)
       return(tidy_df)
     })
 
+
     # Add column with normalized values (if selected by user) ----
     normalized_data <- eventReactive(input$norm_method, {
-      if (is.null(core_tidy_df)) {
+      core_df <- core_tidy_df()
+
+      # Skip evaluation if no core data exists
+      if (is.null(core_df)) {
         return(NULL)
       }
 
-      core_df <- core_tidy_df()
-
+      # Add's a column with normalized values to core, returns core as is if
+      # selection was `None`
       if (input$norm_method == "z_score") {
         core_df %>% tt$mutate(z_score_normed = z_score_norm(raw_sig))
       } else if (input$norm_method == "min_max") {
@@ -184,67 +177,80 @@ server <- function(id, data){
       }
     })
 
+
     # Add column with filtered values ----
     # TODO: Make it so selecting a different filtering method just adds a new
     # column to the existing core data table
     smoothed_data <- eventReactive(input$filter_family, {
-      if (is.null(normalized_data)) {
+      norm_dat <- normalized_data()
+      # Depends on normalized data to exist before it can evaluate
+      if (is.null(norm_dat)) {
         return(NULL)
       }
 
+      # Normalized values get sent to filter-specific module for smoothing
       smoothed_col <- switch(
         input$filter_family,
-        "fir" = mod_FIR_filter$server("fir", normalized_data),
-        "wt" = mod_WT_filter$server("wt", normalized_data),
-        "sw" = mod_SW_filter$server("sw", normalized_data),
+        "fir" = mod_FIR_filter$server("fir", norm_dat),
+        "wt" = mod_WT_filter$server("wt", norm_dat),
+        "sw" = mod_SW_filter$server("sw", norm_dat),
         "No smoothing filter selected"
       )
 
-      # For FIR filters, this is a list with objects `data` and `filt_info`.
-      # `filt_info` contains the output of gsignal::freqz(fir_filter) (a plot)
-      # For WT filters, ...
-      # For SW filers, ...
-      return(
-        list(
-          data = smoothed_col$data,
-          filt_info = smoothed_col$filt_info
-        )
-      )
+      # The returned object is a reactive expression containing a
+      # `reactiveValues()`. The keys inside the `reactiveValues()` can differ
+      # slightly depending on the used filtering method
+      # FIR: `data` and `filt_info`
+      # WT:
+      # SW:
+      re_smooth <- smoothed_col()
+
+      if (!is.null(re_smooth)) {
+        return(re_smooth)
+      }
     })
 
     # Combine raw, normed and filtered (and index) into one tidytable ----
     main_data <- reactive({
-      # normalized_data() is a tidytable with columns `index`, `raw_sig` and, if
-      # a normalization method was selected, either `z_score_normed` or
-      # `min_max_normed`
-      # smoothed_data$data is a numeric vector
-      validate(
-        need(normalized_data, "No normalized/raw values found"),
-        need(smoothed_data$data, "No smoothed values found")
-      )
+      normalized <- normalized_data()
+      smoothed <- smoothed_data()
 
-      combined <- normalized_data() %>%
-        tt$mutate(smoothed = smoothed_data$data)
+      if (!is.null(smoothed$data)) {
+        combined <- normalized %>%
+          tt$mutate(smoothed = smoothed$data)
 
-      return(combined)
+        return(combined)
+      }
     })
 
     # Display a preview of the the three columns (index, raw, filtered)
     output$data_preview <- renderDT({
-      req(main_data)
+      main <- main_data()
+      validate(need(!is.null(main), "Select a column and specify how it should be filtered"))
+
       datatable(
-        data = utils$head(main_data(), n = 10),
+        data = utils$head(main, n = 10),
         style = "bootstrap4"
       )
     })
 
-    return(
-      list(
-        main_df = reactive({ main_data }),
-        filter_family = reactive({ filt_fam }),
-        extra = reactive({ smoothed_data()$filt_info })
-      )
-    )
+    # Creates a list that returns the newly filtered data, as well as info about
+    # used filter type and certain attributes
+    re_out_transform <- reactive({
+      main <- main_data()
+      filt_props <- smoothed_data()
+      if (!is.null(main)) {
+        return(
+          list(
+            df = main,
+            filt_type = filt_props$filt_type,
+            filt_info = filt_props$filt_info
+          )
+        )
+      }
+    })
+
+    return(re_out_transform)
   })
 }
 

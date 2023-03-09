@@ -64,22 +64,31 @@ server <- function(id, data){
   moduleServer(id, function(input, output, session) {
     # Initialize reactive value that will store the data that is currently being
     # worked on
-    re_data <-
-      reactiveValues(
+    re_data <- reactiveValues(
         df = NULL,
         filter_type = NULL,
-        temp = NULL,
         extra = NULL
-      )
+    )
 
-    # Initial file upload gets stored in the `temp` value, will get deleted (?)
-    # once the signal (and optionally index) column have been selected in the
-    # transform tab to save memory
-    re_data$temp <- mod_import$server("mod_import")
+    # `import_data` stores the reactiveVal() returned by the import module (a
+    # tidytable object). The data inside can be accessed via `import_data()`
+    import_data <- mod_import$server("mod_import")
 
-    # Pass data in temp to transform module for relevant column selection and
-    # application of smoothing filters
-    processed_data <- mod_transform$server("mod_transform", data = re_data)
+    # The imported data gets passed along to the transformation module. It
+    # returns a list of variable length, depending on what methods and
+    # selections were made inside the transformation module. However, the first
+    # two components will always be a dataframe containing the raw and
+    # transformed signal values (+ index column), as well as a `character()`
+    # indicating the type of filter that was selected.
+    processed_data <- mod_transform$server("mod_transform", data = import_data)
+
+    observe({
+      updated_data <- processed_data()
+      re_data$df <- updated_data$df
+      re_data$filter_type <- updated_data$filt_type
+      re_data$extra <- updated_data$filt_info
+      print("Body observer just fired")
+    })
 
     charts$server("visualisation", data = raw_data)
   })

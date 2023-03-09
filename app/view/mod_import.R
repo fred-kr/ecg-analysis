@@ -85,8 +85,8 @@ ui <- function(id){
               inputId = ns("crab_data"),
               label = "Select one of the built-in datasets:",
               choices = list(
-                `Select one` = "",
-                `Crabs` = list(
+                "Select one" = "",
+                "Crabs" = list(
                   # "Male 5 - Raw" = "m5_raw",
                   "Male 5 - Raw + WT Filter" = "m5_filter"
                 )
@@ -147,17 +147,17 @@ server <- function(id){
             inputId = ns("csv_opts_quote"),
             label = "Character used for quoting strings:",
             choices = c(
-              `None` = "",
-              `Double Quote` = '"',
-              `Single Quote` = "'"
+              "None" = "",
+              "Double Quote" = '"',
+              "Single Quote" = "'"
             ),
             selected = '"'
           ),
           sW$awesomeRadio(
             inputId = ns("csv_opts_decimal_mark"),
             label = "Decimal separator:",
-            choices = c(`Dot` = ".",
-                        `Comma` = ","),
+            choices = c("Dot" = ".",
+                        "Comma" = ","),
             selected = "."
           ),
           sW$awesomeCheckbox(
@@ -176,9 +176,9 @@ server <- function(id){
             inputId = ns("txt_opts_delim"),
             label = "Column separator:",
             choices = c(
-              `Tab` = "\t",
-              `Comma` = ",",
-              `Semicolon` = ";"
+              "Tab" = "\t",
+              "Comma" = ",",
+              "Semicolon" = ";"
             ),
             selected = "\t"
           ),
@@ -192,17 +192,19 @@ server <- function(id){
             inputId = ns("txt_opts_quote"),
             label = "Character used for quoting strings:",
             choices = c(
-              `None` = "",
-              `Double Quote` = '"',
-              `Single Quote` = "'"
+              "None" = "",
+              "Double Quote" = '"',
+              "Single Quote" = "'"
             ),
             selected = '"'
           ),
           sW$awesomeRadio(
             inputId = ns("txt_opts_decimal_mark"),
             label = "Decimal separator:",
-            choices = c(`Dot` = ".",
-                        `Comma` = ","),
+            choices = c(
+              "Dot" = ".",
+              "Comma" = ","
+            ),
             selected = "."
           ),
           sW$awesomeCheckbox(
@@ -223,7 +225,7 @@ server <- function(id){
       )
     })
 
-    # Reset the `fileInput` and `selectInput` back to their initial values (NULL
+    # Reset the "fileInput" and "selectInput" back to their initial values (NULL
     # and "", respectively)
     observeEvent(input$reset_import, {
       shinyjs$reset(id = "file_upload")
@@ -235,7 +237,7 @@ server <- function(id){
       temp(NULL)
     })
 
-    # When the `Confirm` button is pressed, either load the user selected file
+    # When the "Confirm" button is pressed, either load the user selected file
     # using the correct function or load the selected pre-existing demo data set
     # into the app. In both cases the loaded data will be converted into a
     # tidytable
@@ -255,6 +257,7 @@ server <- function(id){
         temp(tidytable$as_tidytable(content))
       } else if (input$crab_data != "") {
         file <- input$crab_data
+        # TODO: Fix demo data
         content <- switch(
           file,
           "m5_raw" = read_fst("app/static/data/crab_demo_fst.fst"),
@@ -274,6 +277,11 @@ server <- function(id){
       )
     })
 
+    # `temp` is a reactiveVal() containing the data to be analysed in form of a
+    # tidytable. The reactive component gets returned to the `dasboard_body`
+    # module, where the data it holds can be accessed by adding a pair of
+    # parentheses after the return value (e.g. `raw_input <-
+    # mod_import$server("imp"); raw_input()`)
     return(req(temp))
   })
 }

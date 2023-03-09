@@ -80,7 +80,7 @@ ui <- function(id){
 #' @export
 server <- function(id, data){
   moduleServer(id, function(input, output, session) {
-    fir_filtered <- reactiveValues(data = NULL, filt_info = NULL)
+    fir_filtered <- reactiveValues(data = NULL, filt_info = NULL, filt_type = NULL)
 
     # Change maximum allowed value for cutoff frequency depending on sampling
     # frequency
@@ -122,28 +122,19 @@ server <- function(id, data){
 
       # Apply the filter and write the new values into the reactiveValues().
       # `gsignal::freqz` gives visual information about the created filter
-      fir_filtered$data <- filter(fir_filter, data())
+      fir_filtered$data <- filter(fir_filter, data)
       fir_filtered$filt_info <- freqz(fir_filter)
-
-      # Maybe implement the following lines later on, in theory allows to save
-      # multiple different filters in a save slot system, see
-      # app/logic/utils[reactive_storage()]
-
-      # store_fir_prop <- reactive_storage(max_slots = 1)
-      # store_fir_prop(storage = re_fir_prop, data = fir_properties_plot)
-      #
-      # store_fir_data <- reactive_storage(max_slots = 1)
-      # store_fir_data(storage = re_data_fir, data = fir_data)
+      fir_filtered$filt_type <- input$filter_type
     })
 
-    # observeEvent(input$view_in, {
-    #   fir_in <- reactiveValuesToList(input)
-    #   print("FIR inputs:")
-    #   print(fir_in)
-    # })
+    # Reactive expression returning `fir_filtered` once all the keys are no
+    # longer NULL
+    re_out_fir <- reactive({
+      if (!is.null(fir_filtered$data) & !is.null(fir_filtered$filt_info) & !is.null(fir_filtered$filt_type)) {
+        return(fir_filtered)
+      }
+    })
 
-    # Only give return value when data exists
-    req(fir_filtered$data, fir_filtered$filter)
-    return(fir_filtered)
+    return(re_out_fir)
   })
 }
