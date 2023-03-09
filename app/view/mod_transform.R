@@ -137,37 +137,45 @@ server <- function(id, data){
 
     # Create a tidytable from the index and signal columns ----
     core_tidy_df <- reactive({
+      # Assign data to a non-reactive variable to limit re-evaluation
       d_inst <- data()
-      # Only evaluate expression once data() exists
+
+      # Return NULL if no data exists
       if (is.null(d_inst)) {
         return(NULL)
       }
 
-      # Signal column
-      raw_sig <- d_inst %>% tt$select(!!input$col_signal)
+      # Get index toggle value
+      index_toggle <- input$toggle_col_index
 
-      # If no index column is provided, create one by creating a sequence along
-      # the raw signal column, from 1 to length(raw_sig)
-      # FIXME: ifelse is probably wrong way to handle this. need to convert to numeric or sth after using tt function
-      index <-
-        tt$if_else(input$toggle_col_index, tt$select(.df = d_inst, !!input$col_index), seq_along(raw_sig))
+      # Get signal column
+      raw_sig <- d_inst[[input$col_signal]]
 
+      # Get index column based on toggle value
+      if (!index_toggle) {
+        index <- seq(from = 0, by = 1, length.out = length(raw_sig))
+      } else {
+        index <- d_inst[[input$col_index]]
+      }
+
+      # Create tidytable with index and signal columns
       tidy_df <- tt$tidytable(index = index, raw_sig = raw_sig)
+
       return(tidy_df)
     })
 
 
-    # Add column with normalized values (if selected by user) ----
+    # Add column with normalized values (if selected by user)
     normalized_data <- eventReactive(input$norm_method, {
+      # Get core data
       core_df <- core_tidy_df()
 
-      # Skip evaluation if no core data exists
+      # Return NULL if no data exists
       if (is.null(core_df)) {
         return(NULL)
       }
 
-      # Add's a column with normalized values to core, returns core as is if
-      # selection was `None`
+      # Add normalized column based on selected method
       if (input$norm_method == "z_score") {
         core_df %>% tt$mutate(z_score_normed = z_score_norm(raw_sig))
       } else if (input$norm_method == "min_max") {
