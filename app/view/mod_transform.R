@@ -75,7 +75,8 @@ ui <- function(id){
   )
 
 }
-# TODO
+
+
 #' @export
 server <- function(id, data){
   moduleServer(id, function(input, output, session) {
@@ -166,7 +167,7 @@ server <- function(id, data){
 
 
     # Add column with normalized values (if selected by user)
-    normalized_data <- eventReactive(input$norm_method, {
+    normalized_data <- reactive({
       # Get core data
       core_df <- core_tidy_df()
 
@@ -177,9 +178,9 @@ server <- function(id, data){
 
       # Add normalized column based on selected method
       if (input$norm_method == "z_score") {
-        core_df %>% tt$mutate(z_score_normed = z_score_norm(raw_sig))
+        core_df <- core_df %>% tt$mutate(z_score_normed = z_score_norm(raw_sig))
       } else if (input$norm_method == "min_max") {
-        core_df %>% tt$mutate(min_max_normed = min_max_norm(raw_sig))
+        core_df <- core_df %>% tt$mutate(min_max_normed = min_max_norm(raw_sig))
       } else {
         core_df
       }
@@ -209,8 +210,6 @@ server <- function(id, data){
       # `reactiveValues()`. The keys inside the `reactiveValues()` can differ
       # slightly depending on the used filtering method
       # FIR: `data` and `filt_info`
-      # WT:
-      # SW:
       re_smooth <- smoothed_col()
 
       if (!is.null(re_smooth)) {
@@ -231,6 +230,9 @@ server <- function(id, data){
       }
     })
 
+    # TODO: Wrap your head around how inputs are allowed to work while
+    # transforming, either calculate on button press or add a new column
+    # whenever a new combination of values is selected?
     # Display a preview of the the three columns (index, raw, filtered)
     output$data_preview <- renderDT({
       main <- main_data()

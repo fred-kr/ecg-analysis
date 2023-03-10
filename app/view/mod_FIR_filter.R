@@ -1,7 +1,7 @@
 box::use(
   magrittr[`%>%`],
   shiny[tagList, numericInput, conditionalPanel, moduleServer, NS, observeEvent,
-        updateNumericInput, reactiveValues, reactive, uiOutput, renderUI, outputOptions, tags, observe, req, selectInput],
+        updateNumericInput, reactiveValues, reactive, uiOutput, renderUI, tags, observe, req, selectInput],
   gsignal[filter, freqz],
   tidytable[transmute],
   sW = shinyWidgets,
@@ -18,7 +18,7 @@ box::use(
 ui <- function(id){
   ns <- NS(id)
 
-  shinyjs$useShinyjs()
+  # shinyjs$useShinyjs()
   tagList(
     numericInput(
       inputId = ns("f_s"),
@@ -37,7 +37,7 @@ ui <- function(id){
       )
     ),
     conditionalPanel(
-      condition = "input.filter_type === 'low' || input.filter_type === 'high'",
+      condition = paste0("input.", ns("filter_type"), "== 'low' || input.", ns("filter_type"), "== 'high'"),
       numericInput(
         inputId = ns("low_high"),
         label = "Desired cutoff frequency in Hz",
@@ -48,7 +48,13 @@ ui <- function(id){
       )
     ),
     conditionalPanel(
-      condition = "input.filter_type === 'stop' || input.filter_type === 'pass'",
+      condition = paste0(
+        "input.",
+        ns("filter_type"),
+        "== 'stop' || input.",
+        ns("filter_type"),
+        "== 'pass'"
+      ),
       sW$numericRangeInput(
         inputId = ns("stop_pass"),
         label = "Desired band edges in Hz. The first value has to be smaller than the last",
@@ -65,14 +71,8 @@ ui <- function(id){
       value = 30,
       step = 1
     ),
-    actionButton(
-      inputId = ns("apply_filter"),
-      label = "Apply filter settings"
-    ),
-    actionButton(
-      inputId = ns("view_in"),
-      label = "View Inputs"
-    )
+    actionButton(inputId = ns("apply_filter"), label = "Apply filter settings"),
+    actionButton(inputId = ns("view_in"), label = "View Inputs")
   )
 
 }

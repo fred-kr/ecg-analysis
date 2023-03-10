@@ -249,10 +249,26 @@ server <- function(id){
         ext <- tools$file_ext(path)
         content <- switch(
           ext,
-          "fst" = read_fst(path, from = input$fst_opts_range[1], to = input$fst_opts_range[2]),
+          "fst" = read_fst(
+            path,
+            from = input$fst_opts_range[1],
+            to = input$fst_opts_range[2]
+          ),
           "rds" = read_rds(path),
-          "csv" = read_csv2(path, skip = input$csv_opts_skip, quote = input$csv_opts_quote, locale = locale(decimal_mark = input$csv_opts_decimal_mark), col_names = input$csv_opts_col_names),
-          "txt" = read_delim(path, skip = input$txt_opts_skip, quote = input$txt_opts_quote, locale = locale(decimal_mark = input$txt_opts_decimal_mark), col_names = input$txt_opts_col_names)
+          "csv" = read_csv2(
+            path,
+            skip = input$csv_opts_skip,
+            quote = input$csv_opts_quote,
+            locale = locale(decimal_mark = input$csv_opts_decimal_mark),
+            col_names = input$csv_opts_col_names
+          ),
+          "txt" = read_delim(
+            path,
+            skip = input$txt_opts_skip,
+            quote = input$txt_opts_quote,
+            locale = locale(decimal_mark = input$txt_opts_decimal_mark),
+            col_names = input$txt_opts_col_names
+          )
         )
         temp(tidytable$as_tidytable(content))
       } else if (input$crab_data != "") {
