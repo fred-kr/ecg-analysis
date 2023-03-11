@@ -1,21 +1,19 @@
 box::use(
   magrittr[`%>%`],
-  shiny[tagList, numericInput, conditionalPanel, moduleServer, NS, observeEvent,
-        updateNumericInput, reactiveValues, reactive, uiOutput, renderUI, tags, observe, req, selectInput],
-  gsignal[filter, freqz],
+  shiny[
+    tagList, numericInput, conditionalPanel, moduleServer, NS, observeEvent,
+    updateNumericInput, reactiveValues, reactive, uiOutput, renderUI, tags, observe, req, selectInput
+  ],
+  gsignal[filter, freqz, fir1],
   tidytable[transmute],
   sW = shinyWidgets,
   bs4Dash[actionButton],
   shinyjs,
-)
-box::use(
-  app/logic/utils[
-    create_FIR_filter,
-  ],
+  checkmate[assert_count, assert_number, assert_numeric, assert_choice, assert_integerish],
 )
 
 #' @export
-ui <- function(id){
+ui <- function(id) {
   ns <- NS(id)
 
   # shinyjs$useShinyjs()
@@ -74,12 +72,33 @@ ui <- function(id){
     actionButton(inputId = ns("apply_filter"), label = "Apply filter settings"),
     actionButton(inputId = ns("view_in"), label = "View Inputs")
   )
-
 }
 
 #' @export
-server <- function(id, data){
+server <- function(id, data) {
   moduleServer(id, function(input, output, session) {
+    # Helper functions
+    create_FIR_filter <- function(n, w, f_s, type) {
+      assert_count(n, positive = TRUE)
+      assert_number(f_s, lower = 1)
+      assert_numeric(w, upper = f_s, sorted = TRUE, unique = TRUE, min.len = 1, max.len = 2)
+      assert_choice(type, c("low", "high", "stop", "pass"))
+
+      if (length(w) == 1) {
+        assert_choice(type, c("low", "high"))
+      } else if (length(w) == 2) {
+        assert_choice(type, c("stop", "pass"))
+      }
+
+      fir_filter <- fir1(
+        n = n,
+        w = w / (f_s / 2),
+        type = type
+      )
+
+      return(fir_filter)
+    }
+
     fir_filtered <- reactiveValues(data = NULL, filt_info = NULL, filt_type = NULL)
 
     # Change maximum allowed value for cutoff frequency depending on sampling
@@ -101,10 +120,8 @@ server <- function(id, data){
     # When the `Apply filter settings` button is pressed, a FIR-filter is
     # created with the current settings and then applied to the signal data
     observeEvent(input$apply_filter, {
-
       # Cutoff frequency, given in Hz
-      fir_w <- switch(
-        input$filter_type,
+      fir_w <- switch(input$filter_type,
         "low" = input$low_high,
         "high" = input$low_high,
         "stop" = c(input$stop_pass[1], input$stop_pass[2]),

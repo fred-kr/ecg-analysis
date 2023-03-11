@@ -1,12 +1,12 @@
 box::use(
   magrittr[`%>%`],
-  bs4Dash[tabItem, box, actionButton, infoBox, boxDropdown, boxDropdownItem],
+  bs4Dash[bs4AB = actionButton, tabItem, box, infoBox, boxDropdown, boxDropdownItem, boxSidebar],
   DT[renderDT, DTOutput, datatable],
-  shiny[moduleServer, NS, tagList, modalDialog, tags, fileInput, selectInput, modalButton, observeEvent, reactive, req, HTML, reactiveVal, reactiveValues, observe, textInput, uiOutput, renderUI, conditionalPanel, numericInput, icon, reactiveValuesToList, isolate, isTruthy, fluidRow, column],
+  shiny[shAB = actionButton, ...],
   rlang,
   fst[read_fst],
   readr[read_rds, read_csv2, read_delim, locale],
-  tidytable,
+  tt = tidytable,
   tools,
   utils,
   sW = shinyWidgets,
@@ -18,7 +18,7 @@ box::use(
 
 
 #' @export
-ui <- function(id){
+ui <- function(id) {
   ns <- NS(id)
   shinyjs$useShinyjs()
 
@@ -26,101 +26,102 @@ ui <- function(id){
     tabName = "import",
     fluidRow(
       column(
-        width = 6,
+        width = 2,
         box(
           width = NULL,
-          title = "Import your data",
-          tags$div(
-            class = "select-file-type",
-            selectInput(
-              inputId = ns("file_type"),
-              label = "Select file type",
-              choices = list(
-                "CSV" = "csv",
-                "RDS" = "rds",
-                "FST" = "fst",
-                "TXT" = "txt"
+          title = "Data Import Settings",
+          id = "data-import-settings-box",
+          height = "680px",
+          fillCol(
+            flex = c(1, 0.3, 1, 0.3, 3.5, 0.3, 1, 0.3, 0.8),
+            fillRow(
+              selectizeInput(
+                inputId = ns("loaded_data"),
+                label = "Loaded datasets:",
+                choices = list("Male 5 Data" = "m5_filter"),
+                options = list(create = TRUE)
               )
-            )
-          ),
-          tags$hr(),
-          tags$span(
-            class = "import-components-container",
-            tags$div(
-              class = "import-options",
-              uiOutput(ns("import_options"))
-            )
-          ),
-          tags$hr(),
-          tags$div(
-            class = "file-input",
-            fileInput(
-              inputId = ns("file_upload"),
-              label = "Choose file",
-              accept = c(".fst", ".rds", ".txt", ".csv")
-            )
-          ),
-          actionButton(
-            inputId = ns("confirm_import_opts"),
-            label = "Confirm"
-          ),
-          actionButton(
-            inputId = ns("reset_import"),
-            label = "Reset import field"
-          ),
-          actionButton(
-            inputId = ns("clear_cache"),
-            label = "Clear loaded data"
-          )
-        )
-      ),
-      column(
-        width = 6,
-        box(
-          width = NULL,
-          title = "Use one of the integrated data sets",
-          tags$div(
-            class = "crab-data",
-            selectInput(
-              inputId = ns("crab_data"),
-              label = "Select one of the built-in datasets:",
-              choices = list(
-                "Select one" = "",
-                "Crabs" = list(
-                  # "Male 5 - Raw" = "m5_raw",
-                  "Male 5 - Raw + WT Filter" = "m5_filter"
+            ),
+            tags$hr(),
+            fillRow(
+              selectInput(
+                inputId = ns("file_type"),
+                label = "Select file type",
+                choices = list(
+                  "CSV" = "csv",
+                  "RDS" = "rds",
+                  "FST" = "fst"
+                )
+              )
+            ),
+            tags$hr(),
+            uiOutput(ns("import_options")),
+            tags$hr(),
+            fillRow(
+              fileInput(
+                inputId = ns("file_upload"),
+                label = "Choose file",
+                accept = c(".fst", ".rds", ".txt", ".csv")
+              )
+            ),
+            tags$hr(),
+            fillRow(
+              tagList(
+                tags$span(
+                  style = "display: flex; justify-content: space-evenly; margin-top: 10px;",
+                  bs4AB(
+                    inputId = ns("confirm_import_opts"),
+                    label = "Confirm",
+                    status = "success"
+                  ),
+                  bs4AB(
+                    inputId = ns("reset_import"),
+                    label = "Reset inputs",
+                    status = "info"
+                  ),
+                  bs4AB(
+                    inputId = ns("clear_cache"),
+                    label = "Clear Memory",
+                    status = "danger"
+                  )
                 )
               )
             )
           )
         )
-      )
-    ),
-    box(
-      id = "data-preview-box",
-      width = NULL,
-      title = "Preview",
-      tags$div(
-        class = "import-preview",
-        DTOutput(ns("data_preview"), width = "fit-content")
+      ),
+      column(
+        width = 10,
+        box(
+          width = NULL,
+          title = "Data preview",
+          id = "data-preview-box",
+          tags$div(
+            class = "import-preview",
+            DTOutput(ns("data_preview"))
+          )
+        )
       )
     )
   )
-
 }
 
 #' @export
-server <- function(id){
+server <- function(id) {
   moduleServer(id, function(input, output, session) {
+    demo_data <- read_fst("app/static/data/crab_demo_fst.fst") %>%
+      tt$as_tidytable()
 
-    temp <- reactiveVal()
+    dataset <- reactiveVal(demo_data)
 
-    selected_file_type <- reactive({ input$file_type })
+    selected_file_type <- reactive({
+      input$file_type
+    })
 
     output$import_options <- renderUI({
       ns <- session$ns
 
-      # UI elements for FST file upload
+      # UI elements for FST file upload ----
       fst_options <- tagList(
         tags$div(
           class = "fst-options",
@@ -133,172 +134,157 @@ server <- function(id){
         )
       )
 
-      # UI elements for CSV file upload
-      csv_options <- tagList(
-        tags$div(
-          class = "csv-options",
-          numericInput(
-            inputId = ns("csv_opts_skip"),
-            label = "Amount of rows to skip:",
-            value = 0,
-            min = 0
-          ),
-          sW$awesomeRadio(
-            inputId = ns("csv_opts_quote"),
-            label = "Character used for quoting strings:",
-            choices = c(
-              "None" = "",
-              "Double Quote" = '"',
-              "Single Quote" = "'"
+      # UI elements for CSV file upload ----
+      csv_options <- fillRow(
+        fillCol(
+          width = "80%",
+          tagList(
+            tags$div(
+              class = "csv-opts-delim",
+              sW$awesomeRadio(
+                inputId = ns("csv_opts_delim"),
+                label = "Column separator:",
+                choices = c(
+                  "Tab" = "\t",
+                  "Comma" = ",",
+                  "Semicolon" = ";"
+                ),
+                selected = "\t"
+              )
             ),
-            selected = '"'
-          ),
-          sW$awesomeRadio(
-            inputId = ns("csv_opts_decimal_mark"),
-            label = "Decimal separator:",
-            choices = c("Dot" = ".",
-                        "Comma" = ","),
-            selected = "."
-          ),
-          sW$awesomeCheckbox(
-            inputId = ns("csv_opts_col_names"),
-            label = "Use first row as column names?",
-            value = TRUE
+            tags$div(
+              class = "csv-opts-skip",
+              numericInput(
+                inputId = ns("csv_opts_skip"),
+                label = "Skip rows:",
+                value = 0,
+                min = 0
+              )
+            )
+          )
+        ),
+        fillCol(
+          tagList(
+            tags$div(
+              class = "csv-opts-quote",
+              sW$awesomeRadio(
+                inputId = ns("csv_opts_quote"),
+                label = "Quotation character:",
+                choices = c(
+                  "None" = "",
+                  "Double Quote" = '"',
+                  "Single Quote" = "'"
+                ),
+                selected = '"'
+              )
+            ),
+            tags$div(
+              class = "csv-opts-decimal-mark",
+              sW$awesomeRadio(
+                inputId = ns("csv_opts_decimal_mark"),
+                label = "Decimal separator:",
+                choices = c(
+                  "Dot" = ".",
+                  "Comma" = ","
+                ),
+                selected = "."
+              )
+            ),
+            tags$div(
+              class = "csv-opts-col-names",
+              sW$awesomeCheckbox(
+                inputId = ns("csv_opts_col_names"),
+                label = "First row as column names?",
+                value = TRUE
+              )
+            )
           )
         )
       )
 
-      # UI elements for text file upload
-      txt_options <- tagList(
-        tags$div(
-          class = "txt-options",
-          sW$awesomeRadio(
-            inputId = ns("txt_opts_delim"),
-            label = "Column separator:",
-            choices = c(
-              "Tab" = "\t",
-              "Comma" = ",",
-              "Semicolon" = ";"
-            ),
-            selected = "\t"
-          ),
-          numericInput(
-            inputId = ns("txt_opts_skip"),
-            label = "Amount of rows to skip:",
-            value = 0,
-            min = 0
-          ),
-          sW$awesomeRadio(
-            inputId = ns("txt_opts_quote"),
-            label = "Character used for quoting strings:",
-            choices = c(
-              "None" = "",
-              "Double Quote" = '"',
-              "Single Quote" = "'"
-            ),
-            selected = '"'
-          ),
-          sW$awesomeRadio(
-            inputId = ns("txt_opts_decimal_mark"),
-            label = "Decimal separator:",
-            choices = c(
-              "Dot" = ".",
-              "Comma" = ","
-            ),
-            selected = "."
-          ),
-          sW$awesomeCheckbox(
-            inputId = ns("txt_opts_col_names"),
-            label = "Use first row as column names?",
-            value = TRUE
-          )
-        )
-      )
-
-      # Render UI elements for the chosen file type
-      switch(
-        selected_file_type(),
+      # Return correct UI elements depending on file type ----
+      switch(selected_file_type(),
         "csv" = csv_options,
+        "txt" = csv_options,
         "fst" = fst_options,
-        "txt" = txt_options,
         "rds" = "No input options exist for this file type"
       )
     })
 
-    # Reset the "fileInput" and "selectInput" back to their initial values (NULL
-    # and "", respectively)
+    # Reset to initial value (empty)
     observeEvent(input$reset_import, {
       shinyjs$reset(id = "file_upload")
-      shinyjs$reset(id = "crab_data")
+      shinyjs$reset(id = "loaded_data")
     })
 
     # Clear/delete the currently loaded data
     observeEvent(input$clear_cache, {
-      temp(NULL)
+      dataset(NULL)
     })
 
-    # When the "Confirm" button is pressed, either load the user selected file
-    # using the correct function or load the selected pre-existing demo data set
-    # into the app. In both cases the loaded data will be converted into a
-    # tidytable
+    # Loads selected data set in tidytable format
     observeEvent(input$confirm_import_opts, {
-      temp(NULL)
-      if (!is.null(input$file_upload)) {
-        file <- input$file_upload
-        path <- file$datapath
-        ext <- tools$file_ext(path)
-        content <- switch(
-          ext,
-          "fst" = read_fst(
-            path,
-            from = input$fst_opts_range[1],
-            to = input$fst_opts_range[2]
-          ),
-          "rds" = read_rds(path),
-          "csv" = read_csv2(
-            path,
-            skip = input$csv_opts_skip,
-            quote = input$csv_opts_quote,
-            locale = locale(decimal_mark = input$csv_opts_decimal_mark),
-            col_names = input$csv_opts_col_names
-          ),
-          "txt" = read_delim(
-            path,
-            skip = input$txt_opts_skip,
-            quote = input$txt_opts_quote,
-            locale = locale(decimal_mark = input$txt_opts_decimal_mark),
-            col_names = input$txt_opts_col_names
-          )
-        )
-        temp(tidytable$as_tidytable(content))
-      } else if (input$crab_data != "") {
-        file <- input$crab_data
-        # TODO: Fix demo data
-        content <- switch(
-          file,
-          "m5_raw" = read_fst("app/static/data/crab_demo_fst.fst"),
-          "m5_filter" = read_fst("app/static/data/crab_demo_fst.fst"),
-          NULL
-        )
-        temp(tidytable$as_tidytable(content))
-      }
+      req(input$file_upload)
+      dataset(NULL)
 
+      file <- input$file_upload
+      file_name <- file$name
+      path <- file$datapath
+      ext <- tools$file_ext(path)
+      content <- switch(ext,
+        "fst" = read_fst(
+          path,
+          from = input$fst_opts_range[1],
+          to = input$fst_opts_range[2]
+        ),
+        "rds" = read_rds(path),
+        "csv" = read_delim(
+          file = path,
+          delim = input$csv_opts_delim,
+          skip = input$csv_opts_skip,
+          quote = input$csv_opts_quote,
+          locale = locale(decimal_mark = input$csv_opts_decimal_mark),
+          col_names = input$csv_opts_col_names
+        ),
+        "txt" = read_delim(
+          file = path,
+          delim = input$csv_opts_delim,
+          skip = input$csv_opts_skip,
+          quote = input$csv_opts_quote,
+          locale = locale(decimal_mark = input$csv_opts_decimal_mark),
+          col_names = input$csv_opts_col_names
+        )
+      )
+
+      updateSelectizeInput(
+        inputId = "loaded_data",
+        choices = c(isolate(input$loaded_data), file_name),
+        selected = isolate(input$loaded_data)
+      )
+
+      dataset(tt$as_tidytable(content))
     })
+
+    observeEvent(input$loaded_data, {
+      if (input$loaded_data == "m5_filter") {
+        dataset(demo_data)
+      }
+    })
+
 
     # Display the first 10 rows of the loaded data as a preview
     output$data_preview <- renderDT({
       datatable(
-        data = utils$head(temp(), n = 10),
+        data = utils$head(dataset(), n = 10),
         style = "bootstrap4"
       )
     })
 
-    # `temp` is a reactiveVal() containing the data to be analysed in form of a
-    # tidytable. The reactive component gets returned to the `dasboard_body`
+    # `dataset` is a reactiveVal() containing the data to be analysed in form of a
+    # tidytable. The reactive component gets returned to the `dashboard_body`
     # module, where the data it holds can be accessed by adding a pair of
     # parentheses after the return value (e.g. `raw_input <-
     # mod_import$server("imp"); raw_input()`)
-    return(req(temp))
+    return(req(dataset))
   })
 }
-

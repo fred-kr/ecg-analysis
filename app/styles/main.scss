@@ -1,48 +1,3 @@
-.import-components-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  column-gap: 50px;
-
-  .data-import-inputs {
-    display: inline-block;
-  }
-
-  .allowed-file-types {
-    display: inline-block;
-
-  }
-
-  .import-options {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    column-gap: 30px;
-
-    .csv-options {
-      display: flex;
-      flex-direction: row;
-      align-items: baseline;
-      justify-content: flex-start;
-      column-gap: 30px;
-    }
-
-    .txt-options {
-      display: flex;
-      flex-direction: row;
-      align-items: baseline;
-      justify-content: flex-start;
-      column-gap: 30px;
-    }
-  }
-}
-
-#data-preview-box {
-  width: fit-content;
-}
-
 .header-components-container {
   display: flex;
   flex-direction: row;
@@ -96,5 +51,5 @@
   -moz-osx-font-smoothing: grayscale;
 
   /* Support for IE */
-  font-feature-settings: 'liga';
+  font-feature-settings: "liga";
 }

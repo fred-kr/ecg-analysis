@@ -9,27 +9,6 @@ box::use(
 # TODO: put functions into relevant files
 
 # Creating smoothing filters
-#' @export
-create_FIR_filter <- function(n, w, f_s, type) {
-  assert_count(n, positive = TRUE)
-  assert_number(f_s, lower = 1)
-  assert_numeric(w, upper = f_s, sorted = TRUE, unique = TRUE, min.len = 1, max.len = 2)
-  assert_choice(type, c("low", "high", "stop", "pass"))
-
-  if (length(w) == 1) {
-    assert_choice(type, c("low", "high"))
-  } else if (length(w) == 2) {
-    assert_choice(type, c("stop", "pass"))
-  }
-
-  fir_filter <- fir1(
-    n = n,
-    w = w / (f_s / 2),
-    type = type
-  )
-
-  return(fir_filter)
-}
 
 #' @export
 create_WT_filter <- function(type, type_ver) {
@@ -52,17 +31,6 @@ create_WT_filter <- function(type, type_ver) {
 }
 
 # Editing reactive values
-
-# Function to create a sort of save slot system in form of a `reactiveValues`
-# object
-
-# reactive_storage <- function(max_slots) {
-#   index <- 1
-#   function(storage, data) {
-#     storage[[paste0("slot_", index)]] <- data
-#     index <<- index %% min(c(max_slots, 5)) + 1
-#   }
-# }
 
 #' @export
 rv_remove_key <- function(rv, key) {
@@ -99,6 +67,17 @@ rv_get_n_keys <- function(rv) {
     stop("Error: param 'rv' must be of type 'reactiveValues'")
   }
 }
+
+# Function to create a sort of save slot system in form of a `reactiveValues`
+# object
+
+# reactive_storage <- function(max_slots) {
+#   index <- 1
+#   function(storage, data) {
+#     storage[[paste0("slot_", index)]] <- data
+#     index <<- index %% min(c(max_slots, 5)) + 1
+#   }
+# }
 
 # Use material design icon
 #' @export

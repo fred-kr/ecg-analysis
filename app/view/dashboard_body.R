@@ -82,13 +82,13 @@ server <- function(id, data){
     # indicating the type of filter that was selected.
     processed_data <- mod_transform$server("mod_transform", data = import_data)
 
-    observe({
-      updated_data <- processed_data()
-      re_data$df <- updated_data$df
-      re_data$filter_type <- updated_data$filt_type
-      re_data$extra <- updated_data$filt_info
-      print("Body observer just fired")
-    })
+    # observe({
+    #   updated_data <- processed_data()
+    #   re_data$df <- updated_data$df
+    #   re_data$filter_type <- updated_data$filt_type
+    #   re_data$extra <- updated_data$filt_info
+    #   print("Body observer just fired")
+    # })
 
     charts$server("visualisation", data = raw_data)
   })
