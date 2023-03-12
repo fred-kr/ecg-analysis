@@ -3,7 +3,7 @@ box::use(
   bs4Dash[tabItem, box, actionButton],
   DT[renderDT, DTOutput, datatable],
   shiny[...],
-  rl = rlang,
+  rlang,
   tt = tidytable,
   tools,
   utils,

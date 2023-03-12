@@ -70,17 +70,23 @@ rv_get_n_keys <- function(rv) {
 
 # Function to create a sort of save slot system in form of a `reactiveValues`
 # object
-
-# reactive_storage <- function(max_slots) {
-#   index <- 1
-#   function(storage, data) {
-#     storage[[paste0("slot_", index)]] <- data
-#     index <<- index %% min(c(max_slots, 5)) + 1
-#   }
-# }
+#' @export
+reactive_storage <- function(max_slots = 3) {
+  index <- 1
+  function(storage, data) {
+    storage[[paste0("slot_", index)]] <- data
+    index <<- index %% min(c(max_slots, 5)) + 1
+  }
+}
 
 # Use material design icon
 #' @export
 md_icon <- function(icon_name, ...) {
-  icon(name = NULL, class = NULL, lib = NULL, tags$span(class = c("mdi", paste0("mdi-", icon_name))), ...)
+  icon(
+    name = NULL,
+    class = NULL,
+    lib = NULL,
+    tags$span(class = c("mdi", paste0("mdi-", icon_name))),
+    ...
+    )
 }

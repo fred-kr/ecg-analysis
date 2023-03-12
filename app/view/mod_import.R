@@ -1,6 +1,6 @@
 box::use(
   magrittr[`%>%`],
-  bs4Dash[bs4AB = actionButton, tabItem, box, infoBox, boxDropdown, boxDropdownItem, boxSidebar],
+  bs4Dash[bs4AB = actionButton, tabItem, box, infoBox, tabBox, boxDropdown, boxDropdownItem, boxSidebar],
   DT[renderDT, DTOutput, datatable],
   shiny[shAB = actionButton, ...],
   rlang,
@@ -13,7 +13,7 @@ box::use(
   shinyjs,
 )
 box::use(
-  app/logic/utils[md_icon]
+  app/logic/utils[md_icon, reactive_storage]
 )
 
 
@@ -28,10 +28,10 @@ ui <- function(id) {
       column(
         width = 2,
         box(
-          width = NULL,
+          id = ns("data_import_settings"),
           title = "Data Import Settings",
-          id = "data-import-settings-box",
-          height = "680px",
+          width = NULL,
+          height = "672px", # to align with table
           fillCol(
             flex = c(1, 0.3, 1, 0.3, 3.5, 0.3, 1, 0.3, 0.8),
             fillRow(
@@ -77,7 +77,7 @@ ui <- function(id) {
                   bs4AB(
                     inputId = ns("reset_import"),
                     label = "Reset inputs",
-                    status = "info"
+                    status = "warning"
                   ),
                   bs4AB(
                     inputId = ns("clear_cache"),
@@ -93,12 +93,38 @@ ui <- function(id) {
       column(
         width = 10,
         box(
-          width = NULL,
+          id = ns("data_preview"),
           title = "Data preview",
-          id = "data-preview-box",
+          width = NULL,
+          icon = md_icon("file-eye"),
           tags$div(
             class = "import-preview",
             DTOutput(ns("data_preview"))
+          )
+        )
+      )
+    ),
+    fluidRow(
+      column(
+        width = 6,
+        offset = 2,
+        # Access with `input$data_info_box` to get state of box / update from server with
+        # updateBox
+        tabBox(
+          id = ns("data_info"),
+          width = NULL,
+          type = "tabs",
+          tabPanel(
+            title = "Str",
+            value = "str",
+            icon = md_icon("table-question"),
+            verbatimTextOutput(ns("data_str"))
+          ),
+          tabPanel(
+            title = "Summary",
+            value = "summ",
+            icon = md_icon("table-eye"),
+            verbatimTextOutput(ns("data_summ"))
           )
         )
       )
@@ -112,7 +138,10 @@ server <- function(id) {
     demo_data <- read_fst("app/static/data/crab_demo_fst.fst") %>%
       tt$as_tidytable()
 
-    dataset <- reactiveVal(demo_data)
+    dataset <- reactiveValues(crab_demo = demo_data)
+
+    # List of currently loaded data sets. Should be updated when new datasets are loaded.
+    loaded_datasets <- reactiveValues()
 
     selected_file_type <- reactive({
       input$file_type
@@ -265,6 +294,7 @@ server <- function(id) {
       dataset(tt$as_tidytable(content))
     })
 
+    # FIXME: Dropdown list with loaded data sets
     observeEvent(input$loaded_data, {
       if (input$loaded_data == "m5_filter") {
         dataset(demo_data)
