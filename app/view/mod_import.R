@@ -1,6 +1,8 @@
 box::use(
   magrittr[`%>%`],
-  bs4Dash[bs4AB = actionButton, tabItem, box, infoBox, tabBox, boxDropdown, boxDropdownItem, boxSidebar],
+  bs4Dash[
+    bs4AB = actionButton, tabItem, box, infoBox, tabBox, boxDropdown, boxDropdownItem, boxSidebar
+  ],
   DT[renderDT, DTOutput, datatable],
   shiny[shAB = actionButton, ...],
   rlang,
@@ -11,6 +13,7 @@ box::use(
   utils,
   sW = shinyWidgets,
   shinyjs,
+  htmlwidgets[JS],
 )
 box::use(
   app/logic/utils[md_icon, reactive_storage]
@@ -19,19 +22,21 @@ box::use(
 
 #' @export
 ui <- function(id) {
+
   ns <- NS(id)
-  shinyjs$useShinyjs()
 
   tabItem(
+    shinyjs$useShinyjs(),
     tabName = "import",
-    fluidRow(
-      column(
-        width = 2,
+    tags$span(
+      style = "display: flex; flex-direction:row; justify-content: flex-start; column-gap: 15px; width: 100%;",
+      tags$div(
+        style = "flex: 0 0 25%; max-width: 410px !important; min-width: 390px !important;",
         box(
           id = ns("data_import_settings"),
           title = "Data Import Settings",
           width = NULL,
-          height = "672px", # to align with table
+          height = "675px", # to align with table
           fillCol(
             flex = c(1, 0.3, 1, 0.3, 3.5, 0.3, 1, 0.3, 0.8),
             fillRow(
@@ -61,7 +66,8 @@ ui <- function(id) {
               fileInput(
                 inputId = ns("file_upload"),
                 label = "Choose file",
-                accept = c(".fst", ".rds", ".txt", ".csv")
+                multiple = FALSE,
+                accept = c(".fst", ".csv", ".txt", ".rds")
               )
             ),
             tags$hr(),
@@ -90,13 +96,13 @@ ui <- function(id) {
           )
         )
       ),
-      column(
-        width = 10,
+      tags$div(
+        style = "flex: 1 1 75%; max-width: 100%; min-width: fit-content;",
         box(
           id = ns("data_preview"),
           title = "Data preview",
+          height = "675px",
           width = NULL,
-          icon = md_icon("file-eye"),
           tags$div(
             class = "import-preview",
             DTOutput(ns("data_preview"))
@@ -107,7 +113,7 @@ ui <- function(id) {
     fluidRow(
       column(
         width = 6,
-        offset = 2,
+        offset = 3,
         # Access with `input$data_info_box` to get state of box / update from server with
         # updateBox
         tabBox(
@@ -138,7 +144,7 @@ server <- function(id) {
     demo_data <- read_fst("app/static/data/crab_demo_fst.fst") %>%
       tt$as_tidytable()
 
-    dataset <- reactiveValues(crab_demo = demo_data)
+    dataset <- reactiveVal(demo_data)
 
     # List of currently loaded data sets. Should be updated when new datasets are loaded.
     loaded_datasets <- reactiveValues()
@@ -165,66 +171,69 @@ server <- function(id) {
 
       # UI elements for CSV file upload ----
       csv_options <- fillRow(
-        fillCol(
-          width = "80%",
-          tagList(
-            tags$div(
-              class = "csv-opts-delim",
-              sW$awesomeRadio(
-                inputId = ns("csv_opts_delim"),
-                label = "Column separator:",
-                choices = c(
-                  "Tab" = "\t",
-                  "Comma" = ",",
-                  "Semicolon" = ";"
-                ),
-                selected = "\t"
-              )
-            ),
-            tags$div(
-              class = "csv-opts-skip",
-              numericInput(
-                inputId = ns("csv_opts_skip"),
-                label = "Skip rows:",
-                value = 0,
-                min = 0
+        tags$span(
+          style = "display: flex; justify-content: space-between; margin-top: 10px;",
+          fillCol(
+            tagList(
+              tags$div(
+                class = "csv-opts-delim",
+                sW$awesomeRadio(
+                  inputId = ns("csv_opts_delim"),
+                  label = "Column separator:",
+                  choices = c(
+                    "Tab" = "\t",
+                    "Comma" = ",",
+                    "Semicolon" = ";"
+                  ),
+                  selected = "\t"
+                )
+              ),
+              tags$div(
+                class = "csv-opts-skip",
+                numericInput(
+                  inputId = ns("csv_opts_skip"),
+                  label = "Skip rows:",
+                  value = 0,
+                  min = 0,
+                  width = "60%"
+                )
               )
             )
-          )
-        ),
-        fillCol(
-          tagList(
-            tags$div(
-              class = "csv-opts-quote",
-              sW$awesomeRadio(
-                inputId = ns("csv_opts_quote"),
-                label = "Quotation character:",
-                choices = c(
-                  "None" = "",
-                  "Double Quote" = '"',
-                  "Single Quote" = "'"
-                ),
-                selected = '"'
-              )
-            ),
-            tags$div(
-              class = "csv-opts-decimal-mark",
-              sW$awesomeRadio(
-                inputId = ns("csv_opts_decimal_mark"),
-                label = "Decimal separator:",
-                choices = c(
-                  "Dot" = ".",
-                  "Comma" = ","
-                ),
-                selected = "."
-              )
-            ),
-            tags$div(
-              class = "csv-opts-col-names",
-              sW$awesomeCheckbox(
-                inputId = ns("csv_opts_col_names"),
-                label = "First row as column names?",
-                value = TRUE
+          ),
+          fillCol(
+            tagList(
+              tags$div(
+                class = "csv-opts-quote",
+                sW$awesomeRadio(
+                  inputId = ns("csv_opts_quote"),
+                  label = "Quotation character:",
+                  choices = c(
+                    "None" = "",
+                    "Double Quote (\")" = "\"",
+                    "Single Quote (')" = "'"
+                  ),
+                  selected = "\""
+                )
+              ),
+              tags$div(
+                class = "csv-opts-decimal-mark",
+                sW$awesomeRadio(
+                  inputId = ns("csv_opts_decimal_mark"),
+                  label = "Decimal separator:",
+                  choices = c(
+                    "Dot (.)" = ".",
+                    "Comma (,)" = ","
+                  ),
+                  selected = "."
+                )
+              ),
+              tags$div(
+                class = "csv-opts-col-names",
+                sW$awesomeCheckbox(
+                  inputId = ns("csv_opts_col_names"),
+                  label = "First row as column names?",
+                  value = TRUE
+                )
               )
             )
           )
@@ -306,7 +315,13 @@ server <- function(id) {
     output$data_preview <- renderDT({
       datatable(
         data = utils$head(dataset(), n = 10),
-        style = "bootstrap4"
+        # height = "675px",
+        # class = "",
+        rownames = FALSE,
+        # fillContainer = FALSE,
+        # autoHideNavigation = TRUE,
+        style = "bootstrap4",
+        # options = list(pageLength = 10)
       )
     })
 

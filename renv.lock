@@ -767,6 +767,19 @@
         "xmlparsedata"
       ]
     },
+    "lobstr": {
+      "Package": "lobstr",
+      "Version": "1.1.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "f2a94f8fc9db382a642e965339635ad6",
+      "Requirements": [
+        "cpp11",
+        "crayon",
+        "prettyunits",
+        "rlang"
+      ]
+    },
     "logger": {
       "Package": "logger",
       "Version": "0.2.2",
@@ -974,6 +987,19 @@
         "later",
         "magrittr",
         "rlang"
+      ]
+    },
+    "pryr": {
+      "Package": "pryr",
+      "Version": "0.1.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "cfcbe960eca81ceca61df5fa622693de",
+      "Requirements": [
+        "Rcpp",
+        "codetools",
+        "lobstr",
+        "stringr"
       ]
     },
     "ps": {
@@ -1203,9 +1229,14 @@
     "shinyAce": {
       "Package": "shinyAce",
       "Version": "0.4.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "99b2ee37c4f174539b1b0d920b00d16c",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "trestletech",
+      "RemoteRepo": "shinyAce",
+      "RemoteRef": "master",
+      "RemoteSha": "d056ee30ef31506bdd70df01474e1c2e7fe91f75",
+      "Hash": "20d371dc8e13d97da77c204df2560660",
       "Requirements": [
         "jsonlite",
         "shiny"

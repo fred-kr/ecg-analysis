@@ -85,7 +85,6 @@ server <- function(id, data){
       return((x - mean(x, ...)) / sd(x, ...))
     }
 
-
     # Dynamic UI elements for selection of signal/index column ----
     output$col_selection <- renderUI({
       req(data())

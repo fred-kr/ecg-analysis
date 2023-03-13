@@ -1,9 +1,6 @@
 box::use(
   magrittr[`%>%`],
-  shiny[
-    tagList, numericInput, conditionalPanel, moduleServer, NS, observeEvent,
-    updateNumericInput, reactiveValues, reactive, uiOutput, renderUI, tags, observe, req, selectInput
-  ],
+  shiny[...],
   gsignal[filter, freqz, fir1],
   tidytable[transmute],
   sW = shinyWidgets,
@@ -16,8 +13,8 @@ box::use(
 ui <- function(id) {
   ns <- NS(id)
 
-  # shinyjs$useShinyjs()
   tagList(
+    shinyjs$useShinyjs(),
     numericInput(
       inputId = ns("f_s"),
       label = "Enter the sampling frequency of your data in Hz",
@@ -35,7 +32,13 @@ ui <- function(id) {
       )
     ),
     conditionalPanel(
-      condition = paste0("input.", ns("filter_type"), "== 'low' || input.", ns("filter_type"), "== 'high'"),
+      condition = paste0(
+        "input.",
+        ns("filter_type"),
+        " == 'low' || input.",
+        ns("filter_type"),
+        " == 'high'"
+      ),
       numericInput(
         inputId = ns("low_high"),
         label = "Desired cutoff frequency in Hz",
@@ -49,9 +52,9 @@ ui <- function(id) {
       condition = paste0(
         "input.",
         ns("filter_type"),
-        "== 'stop' || input.",
+        " == 'stop' || input.",
         ns("filter_type"),
-        "== 'pass'"
+        " == 'pass'"
       ),
       sW$numericRangeInput(
         inputId = ns("stop_pass"),

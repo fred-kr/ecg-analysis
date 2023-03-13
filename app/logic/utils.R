@@ -11,8 +11,11 @@ box::use(
 # Creating smoothing filters
 
 #' @export
-create_WT_filter <- function(type, type_ver) {
-  assert_choice(type, c("Haar", "Beylkin", "Coiflet", "Daubechies", "Symmlet", "Vaidyanathan", "Battle"))
+create_wt_filter <- function(type, type_ver) {
+  assert_choice(
+    type,
+    c("Haar", "Beylkin", "Coiflet", "Daubechies", "Symmlet", "Vaidyanathan", "Battle")
+  )
   if (type == "Coiflet") {
     assert_choice(type_ver, c(1:5))
   } else if (type == "Daubechies") {
@@ -30,14 +33,16 @@ create_WT_filter <- function(type, type_ver) {
   return(wt_filter)
 }
 
-# Editing reactive values
+# Editing reactive values ----
 
 #' @export
 rv_remove_key <- function(rv, key) {
-  if (is.reactivevalues(rv) & is.character(key)) {
+  if (is.reactivevalues(rv) && is.character(key)) {
     .subset2(rv, "impl")$.values$remove(key)
   } else {
-    stop("Error: param 'rv' must be of type 'reactiveValues' and param 'key' must be of type 'character'")
+    stop(
+      "Error: param 'rv' must be of type 'reactiveValues' and param 'key' must be of 'character'"
+    )
   }
 }
 
@@ -88,5 +93,5 @@ md_icon <- function(icon_name, ...) {
     lib = NULL,
     tags$span(class = c("mdi", paste0("mdi-", icon_name))),
     ...
-    )
+  )
 }

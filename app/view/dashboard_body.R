@@ -9,6 +9,7 @@ box::use(
   readr[read_csv, read_rds, read_delim],
   tidytable,
   rlang,
+
 )
 box::use(
   app/view/charts,
@@ -52,8 +53,7 @@ ui <- function(id){
       mod_transform$ui(ns("mod_transform")),
       charts$ui(ns("visualisation")),
       tabItem(
-        tabName = "analysis",
-        "Coming soon"
+        tabName = "analysis"
       )
     )
   )
@@ -91,5 +91,6 @@ server <- function(id, data){
     # })
 
     charts$server("visualisation", data = raw_data)
+
   })
 }
