@@ -9,7 +9,6 @@ box::use(
   readr[read_csv, read_rds, read_delim],
   tidytable,
   rlang,
-
 )
 box::use(
   app/view/charts,

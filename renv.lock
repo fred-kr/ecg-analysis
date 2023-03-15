@@ -547,6 +547,14 @@
         "withr"
       ]
     },
+    "git2r": {
+      "Package": "git2r",
+      "Version": "0.31.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "acb972e0be37f83b9c762d962d75a188",
+      "Requirements": []
+    },
     "glue": {
       "Package": "glue",
       "Version": "1.6.2",
@@ -1226,6 +1234,23 @@
         "xtable"
       ]
     },
+    "shiny.info": {
+      "Package": "shiny.info",
+      "Version": "0.2.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "Appsilon",
+      "RemoteRepo": "shiny.info",
+      "RemoteRef": "develop",
+      "RemoteSha": "9c984f00d5ec665624a21b6bdcc20aa6ffd94445",
+      "Hash": "35341c8f6e0726a48b7a7decba33900e",
+      "Requirements": [
+        "git2r",
+        "glue",
+        "shiny"
+      ]
+    },
     "shinyAce": {
       "Package": "shinyAce",
       "Version": "0.4.2",
@@ -1255,6 +1280,42 @@
         "jsonlite",
         "rlang",
         "sass",
+        "shiny"
+      ]
+    },
+    "shinyalert": {
+      "Package": "shinyalert",
+      "Version": "3.0.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "daattali",
+      "RemoteRepo": "shinyalert",
+      "RemoteRef": "master",
+      "RemoteSha": "7f208efcf7428a35237e96133dc068e569a55075",
+      "Hash": "2cefd0bed0eaf514f04a8c81011222da",
+      "Requirements": [
+        "htmltools",
+        "shiny",
+        "uuid"
+      ]
+    },
+    "shinyjqui": {
+      "Package": "shinyjqui",
+      "Version": "0.4.1.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "yang-tang",
+      "RemoteRepo": "shinyjqui",
+      "RemoteRef": "master",
+      "RemoteSha": "b2c5b99de621adbe2988115ec7c94a19bf0dd83d",
+      "Hash": "a4a86d35e859b76b0dd4a5af9c395621",
+      "Requirements": [
+        "htmltools",
+        "htmlwidgets",
+        "jsonlite",
+        "rlang",
         "shiny"
       ]
     },
@@ -1504,6 +1565,14 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "1fe17157424bb09c48a8b3b550c753bc",
+      "Requirements": []
+    },
+    "uuid": {
+      "Package": "uuid",
+      "Version": "1.1-0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "f1cb46c157d080b729159d407be83496",
       "Requirements": []
     },
     "vctrs": {

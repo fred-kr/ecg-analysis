@@ -32,9 +32,13 @@ create_wt_filter <- function(type, type_ver) {
 
   return(wt_filter)
 }
+# Generally useful ----
+
+# Negated %in% operator
+#' @export
+"%!in%" <- function(x, table) match(x, table, nomatch = 0L) == 0L
 
 # Editing reactive values ----
-
 #' @export
 rv_remove_key <- function(rv, key) {
   if (is.reactivevalues(rv) && is.character(key)) {
@@ -50,6 +54,18 @@ rv_remove_key <- function(rv, key) {
 rv_remove_all_keys <- function(rv) {
   if (is.reactivevalues(rv)) {
     .subset2(rv, "impl")$.values$clear()
+  } else {
+    stop("Error: param 'rv' must be of type 'reactiveValues'")
+  }
+}
+
+#' @export
+rv_remove_all_but_first <- function(rv) {
+  if (is.reactivevalues(rv)) {
+    rm_keys <- .subset2(rv, "impl")$.values$keys(TRUE)[-1]
+    for (i in 1:length(rm_keys)) {
+      rv_remove_key(rv, rm_keys[[i]])
+    }
   } else {
     stop("Error: param 'rv' must be of type 'reactiveValues'")
   }

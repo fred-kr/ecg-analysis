@@ -6,67 +6,33 @@ box::use(
     actionButton,
     infoBox,
   ],
-  shinyjs[useShinyjs],
+  shinyjs,
   magrittr[`%>%`],
-  shiny[
-    moduleServer,
-    NS,
-    tagList,
-    tags,
-    span,
-    div,
-    icon,
-    observeEvent,
-    reactiveValuesToList,
-    reactiveValues,
-    eventReactive,
-    modalDialog,
-    showModal,
-    removeModal,
-    fileInput,
-    selectInput,
-    modalButton,
-    HTML,
-    reactive,
-    observe,
-    isolate,
-    req,
-  ],
+  shiny[...],
   tools,
   fst[read_fst],
   readr[read_csv, read_delim],
+  pryr,
+  utils,
+  shiny.info,
 )
-# box::use(
-#
-# )
+box::use(
+  app/logic/utils[md_icon],
+)
 
 #' @export
 ui <- function(id) {
   ns <- NS(id)
 
   dashboardHeader(
-    useShinyjs(),
+    shinyjs$useShinyjs(),
     title = dashboardBrand(
       title = "ECG Analysis",
       image = "static/images/heart-pulse.svg"
     ),
     border = TRUE,
-    controlbarIcon = icon(
-      name = NULL,
-      class = NULL,
-      lib = NULL,
-      tags$span(
-        class = c("mdi", "mdi-filter-settings")
-      )
-    ),
-    sidebarIcon = icon(
-      name = NULL,
-      class = NULL,
-      lib = NULL,
-      tags$span(
-        class = c("mdi", "mdi-menu")
-      )
-    ),
+    controlbarIcon = md_icon("filter-settings"),
+    sidebarIcon = md_icon("menu"),
     fixed = FALSE,
     span(
       class = "header-components-container",
@@ -74,23 +40,19 @@ ui <- function(id) {
         class = c("dev-btn", "header-btn"),
         inputId = ns("refresh"),
         label = "Refresh",
-        icon = icon(
-          name = NULL,
-          class = NULL,
-          lib = NULL,
-          tags$span(class = c("mdi", "mdi-refresh"))
-        )
+        icon = md_icon("refresh")
       ),
       actionButton(
         class = c("dev-btn", "header-btn"),
         inputId = ns("in_vars"),
         label = "Input Variables",
-        icon = icon(
-          name = NULL,
-          class = NULL,
-          lib = NULL,
-          tags$span(class = c("mdi", "mdi-console"))
-        )
+        icon = md_icon("console")
+      ),
+      actionButton(
+        class = c("dev-btn", "header-btn"),
+        inputId = ns("mem_usage"),
+        label = "Show memory usage",
+        icon = md_icon("memory")
       )
     )
   )
@@ -107,5 +69,11 @@ server <- function(id) {
       li_inputs <- reactiveValuesToList(input)
       print(li_inputs)
     })
+
+    # Prints memory usage to console
+    observeEvent(input$mem_usage, {
+      print(pryr$mem_used())
+    })
+
   })
 }

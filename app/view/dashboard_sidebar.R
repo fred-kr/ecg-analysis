@@ -53,6 +53,8 @@ ui <- function(id) {
   )
 }
 
+# Test comment
+rstudioapi::getSourceEditorContext()
 #' @export
 server <- function(id) {
   moduleServer(id, function(input, output, session) {
